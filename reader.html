@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
@@ -1121,7 +1121,7 @@ gi('nsfwT').onclick=function(){C.nsfw=!C.nsfw;saveC();gi('nsfwT').classList.togg
 gi('modeT').onclick=function(){C.pg=!C.pg;saveC();gi('modeT').classList.toggle('on',C.pg);toast(C.pg?'Modo página':'Modo cascada');};
 
 /* LOGO */
-gi('hLogo').onclick=function(){window.location.href='hub.html';};
+gi('hLogo').onclick=function(){window.location.href='go:principal';};
 
 /* SCROLL HEADER */
 window.addEventListener('scroll',function(){gi('hdr').classList.toggle('s',window.scrollY>10);},{passive:true});
@@ -1150,7 +1150,7 @@ buildHero();buildRows();updCnt();
   }
   window.addEventListener('scroll',check,{passive:true});
 })();
-gi('hLogo').onclick=function(){window.location.href='hub.html';};
+gi('hLogo').onclick=function(){window.location.href='go:principal';};
 
 })();
 </script>
@@ -1193,27 +1193,27 @@ var _u=TF.getUser();if(!_u)setTimeout(function(){TF.showLogin();},800);
 </script>
 
 <nav id="tfr-nav" style="position:fixed;bottom:0;left:0;right:0;z-index:5000;background:rgba(6,0,15,.96);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-around;height:58px;padding-bottom:env(safe-area-inset-bottom,0px)">
-  <a href="hub.html" style="display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.38);text-decoration:none;padding:5px 10px;border-radius:12px;transition:all .15s">
+  <a href="go:principal" style="display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.38);text-decoration:none;padding:5px 10px;border-radius:12px;transition:all .15s">
     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
     <span style="font-size:9px;font-weight:600">Inicio</span>
   </a>
-  <a href="music.html" style="display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.38);text-decoration:none;padding:5px 10px;border-radius:12px;transition:all .15s">
+  <a href="go:tfmusic" style="display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.38);text-decoration:none;padding:5px 10px;border-radius:12px;transition:all .15s">
     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
     <span style="font-size:9px;font-weight:600">Musica</span>
   </a>
-  <a href="core.html" style="display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.38);text-decoration:none;padding:5px 10px;border-radius:12px;transition:all .15s">
+  <a href="go:tfvcore" style="display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.38);text-decoration:none;padding:5px 10px;border-radius:12px;transition:all .15s">
     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
     <span style="font-size:9px;font-weight:600">Navegar</span>
   </a>
-  <a href="games.html" style="display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.38);text-decoration:none;padding:5px 10px;border-radius:12px;transition:all .15s">
+  <a href="go:Tfgames" style="display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.38);text-decoration:none;padding:5px 10px;border-radius:12px;transition:all .15s">
     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="4"></rect><path d="M6 12h4M8 10v4"></path><circle cx="16" cy="11" r="1" fill="currentColor" stroke="none"></circle><circle cx="18" cy="13" r="1" fill="currentColor" stroke="none"></circle></svg>
     <span style="font-size:9px;font-weight:600">Juegos</span>
   </a>
-  <a href="walls.html" style="display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.38);text-decoration:none;padding:5px 10px;border-radius:12px;transition:all .15s">
+  <a href="go:wallpapers" style="display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.38);text-decoration:none;padding:5px 10px;border-radius:12px;transition:all .15s">
     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>
     <span style="font-size:9px;font-weight:600">Wallpapers</span>
   </a>
-  <a href="tv.html" style="display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.38);text-decoration:none;padding:5px 10px;border-radius:12px;transition:all .15s">
+  <a href="go:tftv" style="display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.38);text-decoration:none;padding:5px 10px;border-radius:12px;transition:all .15s">
     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"></rect><path d="M9 3h6M12 7v2"></path></svg>
     <span style="font-size:9px;font-weight:600">TFTV</span>
   </a>
