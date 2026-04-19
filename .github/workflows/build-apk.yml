@@ -1,0 +1,187 @@
+name: Build TFApp APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Instalar ImageMagick
+        run: sudo apt-get install -y imagemagick
+
+      - name: Preparar carpeta www
+        run: |
+          mkdir -p www
+          cp *.html www/
+          cat > www/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="es">
+          <head>
+            <meta charset="utf-8"/>
+            <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+            <title>TFApp</title>
+            <style>
+              *{margin:0;padding:0;box-sizing:border-box}
+              html,body{height:100%;background:#0a0011;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px}
+              .logo{width:110px;height:110px;border-radius:26px;box-shadow:0 0 40px rgba(168,85,247,.5);animation:pop .45s cubic-bezier(.34,1.56,.64,1) both}
+              .name{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:30px;font-weight:900;background:linear-gradient(90deg,#e9d5ff,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center}
+              .sub{font-family:-apple-system,sans-serif;font-size:12px;color:rgba(255,255,255,.35);letter-spacing:.1em;text-align:center;text-transform:uppercase}
+              .bar-wrap{width:140px;height:2px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-top:10px}
+              .bar{height:100%;width:0%;background:linear-gradient(90deg,#7e3cff,#d9a3ff);border-radius:2px;animation:load 1.7s ease forwards}
+              @keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+              @keyframes load{from{width:0%}to{width:100%}}
+            </style>
+          </head>
+          <body>
+            <img class="logo" src="https://i.imgur.com/lALmGx6.png" alt="TFApp"/>
+            <div>
+              <div class="name">TFAPP</div>
+              <div class="sub" style="margin-top:5px">The Friendly Village</div>
+            </div>
+            <div class="bar-wrap"><div class="bar"></div></div>
+            <script>setTimeout(function(){ window.location.replace('hub.html'); }, 2000);</script>
+          </body>
+          </html>
+          EOF
+
+      - name: Crear package.json
+        run: |
+          cat > package.json << 'EOF'
+          {
+            "name": "tfapp",
+            "version": "1.0.0",
+            "description": "TFV App",
+            "dependencies": {
+              "@capacitor/core": "6.2.0",
+              "@capacitor/android": "6.2.0",
+              "@capacitor/cli": "6.2.0"
+            }
+          }
+          EOF
+
+      - name: Crear capacitor.config.json
+        run: |
+          cat > capacitor.config.json << 'EOF'
+          {
+            "appId": "com.tfv.tfapp",
+            "appName": "TFApp",
+            "webDir": "www",
+            "server": {
+              "androidScheme": "https"
+            },
+            "android": {
+              "allowMixedContent": true,
+              "captureInput": true,
+              "webContentsDebuggingEnabled": false,
+              "backgroundColor": "#0a0011"
+            }
+          }
+          EOF
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Agregar plataforma Android
+        run: npx cap add android
+
+      - name: Sincronizar Capacitor
+        run: npx cap sync android
+
+      - name: Generar iconos desde logo TFV
+        run: |
+          curl -L "https://i.imgur.com/lALmGx6.png" -o logo.png
+
+          # Base con fondo morado + logo centrado
+          convert -size 1024x1024 xc:"#1a0035" bg.png
+          convert bg.png logo.png -gravity center -resize 800x800 -composite icon_full.png
+
+          declare -A SIZES=( [mipmap-mdpi]=48 [mipmap-hdpi]=72 [mipmap-xhdpi]=96 [mipmap-xxhdpi]=144 [mipmap-xxxhdpi]=192 )
+          for folder in "${!SIZES[@]}"; do
+            size="${SIZES[$folder]}"
+            dir="android/app/src/main/res/$folder"
+            mkdir -p "$dir"
+            convert icon_full.png -resize "${size}x${size}" "$dir/ic_launcher.png"
+            convert icon_full.png -resize "${size}x${size}" "$dir/ic_launcher_round.png"
+          done
+
+          # Foreground para adaptive icon
+          declare -A FG=( [mipmap-mdpi]=108 [mipmap-hdpi]=162 [mipmap-xhdpi]=216 [mipmap-xxhdpi]=324 [mipmap-xxxhdpi]=432 )
+          for folder in "${!FG[@]}"; do
+            size="${FG[$folder]}"
+            inner=$((size * 66 / 100))
+            dir="android/app/src/main/res/$folder"
+            mkdir -p "$dir"
+            convert logo.png -resize "${inner}x${inner}" \
+              -gravity center -background none -extent "${size}x${size}" \
+              "$dir/ic_launcher_foreground.png"
+          done
+
+          # Adaptive icon XML
+          mkdir -p android/app/src/main/res/mipmap-anydpi-v26
+          cat > android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+            <background android:drawable="@color/ic_launcher_background"/>
+            <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+          </adaptive-icon>
+          EOF
+          cp android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml \
+             android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
+
+          # Color de fondo
+          mkdir -p android/app/src/main/res/values
+          if [ -f android/app/src/main/res/values/colors.xml ]; then
+            grep -q "ic_launcher_background" android/app/src/main/res/values/colors.xml || \
+            sed -i 's|</resources>|    <color name="ic_launcher_background">#1a0035</color>\n</resources>|' \
+              android/app/src/main/res/values/colors.xml
+          else
+            printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="ic_launcher_background">#1a0035</color>\n</resources>\n' \
+              > android/app/src/main/res/values/colors.xml
+          fi
+
+      - name: Agregar permisos en AndroidManifest.xml
+        run: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          PERMS="    <uses-permission android:name=\"android.permission.INTERNET\" />\n\
+              <uses-permission android:name=\"android.permission.POST_NOTIFICATIONS\" />\n\
+              <uses-permission android:name=\"android.permission.READ_MEDIA_IMAGES\" />\n\
+              <uses-permission android:name=\"android.permission.READ_MEDIA_VIDEO\" />\n\
+              <uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\" android:maxSdkVersion=\"32\" />\n\
+              <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" android:maxSdkVersion=\"29\" />\n\
+              <uses-permission android:name=\"android.permission.CAMERA\" />\n\
+              <uses-permission android:name=\"android.permission.FOREGROUND_SERVICE\" />\n\
+              <uses-permission android:name=\"android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK\" />\n\
+              <uses-permission android:name=\"android.permission.WAKE_LOCK\" />\n\
+              <uses-permission android:name=\"android.permission.VIBRATE\" />"
+          sed -i "s|<application|${PERMS}\n    <application|" "$MANIFEST"
+
+      - name: Construir APK debug
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Subir APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: TFApp-v1
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
