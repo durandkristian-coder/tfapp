@@ -500,7 +500,6 @@ async function loadCovIdb(tid){
   if(urlCache.has(ck)) return urlCache.get(ck);
   try{
     const bl=await dbGet(ck); if(!bl) return null;
-    /* Use FileReader→data URL: stable across WebView restarts, works in notifications */
     const dataUrl=await new Promise((ok,er)=>{ const fr=new FileReader(); fr.onload=()=>ok(fr.result); fr.onerror=()=>er(fr.error); fr.readAsDataURL(bl); });
     urlCache.set(ck,dataUrl); return dataUrl;
   }catch{ return null; }
@@ -570,7 +569,6 @@ function initAudioCtx(){
     _vocalNode.connect(_dryGain); _vocalNode.connect(_convNode); _convNode.connect(_wetGain);
     _dryGain.connect(_masterGain); _wetGain.connect(_masterGain); _analyser=_actx.createAnalyser();_analyser.fftSize=512;
     _masterGain.connect(_analyser);_analyser.connect(_actx.destination);
-    /* MediaStreamDestination → feeds <video> element → Android sees active media → shows notification */
     try{
       _msDest=_actx.createMediaStreamDestination();
       _masterGain.connect(_msDest);
@@ -578,7 +576,6 @@ function initAudioCtx(){
       if(_vidProxy){
         _vidProxy.srcObject=_msDest.stream;
         _vidProxy.muted=true;
-        /* DON'T play yet — play when music starts to avoid autoplay blocks */
       }
     }catch(msErr){ console.warn('MediaStream bridge fail:',msErr); }
     applyEq();
@@ -589,28 +586,22 @@ function applyEq(){ if(!_actx) return; _eqNodes.forEach((n,i)=>{ n.gain.value=cf
 function resumeCtx(){ if(_actx&&_actx.state==='suspended') _actx.resume().catch(()=>{}); }
 
 const audio=new Audio(); audio.preload='auto'; audio.setAttribute('playsinline','true');
-/* Silent keepalive: holds Android audio focus so notification persists */
-/* AudioContext silence node — keeps audio focus without user gesture requirement */
 function _silStart(){
-  /* Video proxy handles audio focus now — keep as no-op for compatibility */
   if(_vidProxy&&_vidProxy.paused&&_vidProxy.srcObject){
     _vidProxy.play().catch(()=>{});
   }
 }
 function _silStop(){
-  /* Keep video running to maintain audio focus even briefly */
   setTimeout(function(){
     if(audio.paused&&_vidProxy&&!_vidProxy.paused){
       _vidProxy.pause();
     }
   },500);
 }
-/* Unlock audio on first user touch (needed for autoplay policy) */
 let _audioUnlocked=false;
 function _unlockAudio(){
   if(_audioUnlocked) return;
   _audioUnlocked=true;
-  /* Prime audio element in user gesture context */
   const tmp=audio.src;
   if(!tmp){ audio.src='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA'; }
   audio.load();
@@ -622,7 +613,6 @@ document.addEventListener('click',_unlockAudio,{once:true,passive:true});
 document.addEventListener('DOMContentLoaded',()=>{
   audio.style.display='none';
   try{ document.body.appendChild(audio); }catch(e){}
-  /* Bootstrap MediaSession so Android registers us as media app */
   if('mediaSession' in navigator){
     try{
       navigator.mediaSession.metadata=new MediaMetadata({title:'TFMusic',artist:'TFV',album:'TFMusic'});
@@ -639,7 +629,6 @@ async function relWL(){ if(wl){ try{await wl.release();}catch{} wl=null; } }
 document.addEventListener('visibilitychange',async()=>{
   if(document.visibilityState==='visible'){
     if(!audio.paused&&!wl) await acqWL();
-    /* Refresh covers */
     let needRender=false;
     for(const t of tracks){
       if(!t.coverUrl||(typeof t.coverUrl==='string'&&t.coverUrl.startsWith('blob:'))){
@@ -648,15 +637,12 @@ document.addEventListener('visibilitychange',async()=>{
       }
     }
     if(needRender) renderAll();
-    /* Re-assert MediaSession */
     if(!audio.paused){ const _rt=tracks.find(x=>x.id===curId); if(_rt){ updMS(_rt); _silStart(); } }
-    /* ── RESUME FIX: blob URLs expire when WebView goes to background ── */
     if(curId&&(audio.paused||audio.error||!audio.src)){
       const savedPos=_getSavedPos();
       const wasPlaying=!audio.paused;
       const t=tracks.find(x=>x.id===curId);
       if(t&&t.bId){
-        /* Invalidate cached blob URL — it may be stale */
         const oldUrl=urlCache.get(t.bId);
         if(oldUrl&&oldUrl.startsWith('blob:')){ try{URL.revokeObjectURL(oldUrl);}catch(e){} urlCache.delete(t.bId); }
         const freshUrl=await getBlobUrl(t.bId);
@@ -714,7 +700,7 @@ const toasts=$('toasts'), pcv=$('pcv');
 const uid=()=>'t'+Math.random().toString(36).slice(2,9);
 const fmt=s=>{ if(!s||isNaN(s))return'00:00'; const m=Math.floor(s/60),sc=Math.floor(s%60); return`${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`; };
 const fmtTotal=s=>{ if(!s||s<60)return''; const h=Math.floor(s/3600),m=Math.floor((s%3600)/60); return h?`${h}h ${m}m`:`${m}m`; };
-const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&','<':'<','>':'>','"':'"',"'":'''}[c]));
+const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function r2d(f){ return new Promise((ok,er)=>{ const rd=new FileReader(); rd.onload=()=>ok(rd.result); rd.onerror=()=>er(rd.error); rd.readAsDataURL(f); }); }
 function d2b(d){ const a=d.split(','),mime=a[0].match(/:(.*?);/)[1],b=atob(a[1]),n=b.length,u=new Uint8Array(n); for(let i=0;i<n;i++)u[i]=b.charCodeAt(i); return new Blob([u],{type:mime}); }
 async function getBlobUrl(blobId){ if(!blobId) return null; if(urlCache.has(blobId)) return urlCache.get(blobId); try{ const bl=await dbGet(blobId); if(!bl) return null; const u=URL.createObjectURL(bl); urlCache.set(blobId,u); return u; }catch{ return null; } }
@@ -766,7 +752,6 @@ async function addFile(file){
   let coverUrl=null;
   try{
     const rawCov=await extractCoverFromAudio(file);
-    /* FIX 1: siempre guardar portada en IndexedDB al importar */
     if(rawCov){ coverUrl=await compressCover(rawCov); await saveCovIdb(id,coverUrl); }
   }catch{}
   const t={ id, name:name||base, artist, filename:file.name, bId, coverUrl, dur, addedAt:Date.now() };
@@ -870,7 +855,7 @@ async function play(id,list){
   const u=await getBlobUrl(t.bId);
   if(!u){ toast('No se pudo cargar el audio'); return; }
   _suppressErr=true; audio.src=u;
-  audio.load(); /* Force WebView to register audio pipeline */
+  audio.load();
   await new Promise(r=>setTimeout(r,30));
   _suppressErr=false;
   resumeCtx();
@@ -880,7 +865,6 @@ async function play(id,list){
   playCounts[id]=(playCounts[id]||0)+1;
   addRecent(id); acqWL(); markActive(); saveAll();
   setTimeout(scrollToActive,80);
-  /* MediaSession: set AFTER play() resolves so Android sees active audio */
   updMS(t);
   showNowPlaying(t);
 }
@@ -937,7 +921,6 @@ audio.addEventListener('play',()=>{
   const _t=tracks.find(x=>x.id===curId);
   if(_t){ setTimeout(()=>updMS(_t),50); showNowPlaying(_t); }
   _silStart();
-  /* Start video proxy — triggers Android's native media session detection */
   if(_vidProxy&&_vidProxy.paused){
     _vidProxy.play().catch(()=>{});
   }
@@ -951,7 +934,6 @@ audio.addEventListener('ended',()=>{
 });
 audio.addEventListener('timeupdate',()=>{
   updateProg(); schedPos();
-  /* Save position every ~2s for resume-after-backgrounding */
   if(!audio.paused&&Math.floor(audio.currentTime)%2===0){
     try{ sessionStorage.setItem('tfm_pos',JSON.stringify({id:curId,t:audio.currentTime})); }catch(e){}
   }
@@ -960,7 +942,6 @@ audio.addEventListener('ended',()=>{ if(_xfTimer){ clearTimeout(_xfTimer); _xfTi
 audio.addEventListener('error',async()=>{
   if(_suppressErr) return;
   if(!audio.error||audio.error.code===audio.error.MEDIA_ERR_ABORTED) return;
-  /* Blob URL may have expired — try to reload from IDB */
   if(curId){
     const t=tracks.find(x=>x.id===curId);
     if(t&&t.bId){
@@ -984,23 +965,11 @@ audio.addEventListener('error',async()=>{
 
 function updMS(t){
   if(!('mediaSession' in navigator)||!t) return;
-  /* ─────────────────────────────────────────────────────────
-     MediaSession — diseñado para la app nativa futura.
-     En AppCreator24 WebView funciona internamente pero no
-     muestra notificación (limitación del APK, no del código).
-     En la app nativa con Capacitor/Android esto SÍ mostrará
-     el widget en la barra de notificaciones con portada.
-     ───────────────────────────────────────────────────────── */
   const TFV_ART='https://i.imgur.com/lALmGx6.png';
-  /* Artwork: para la notificación Android necesita URL HTTPS.
-     Si la portada es data: la usamos en el array también
-     (Chrome la acepta; la app nativa usará la HTTPS de respaldo) */
   const artwork=[];
   if(t.coverUrl&&t.coverUrl.startsWith('data:')){
-    /* data: URL para Chrome/PWA */
     artwork.push({src:t.coverUrl,sizes:'512x512',type:'image/jpeg'});
   }
-  /* HTTPS fallback siempre presente para notificación nativa */
   artwork.push({src:TFV_ART,sizes:'512x512',type:'image/png'});
   artwork.push({src:TFV_ART,sizes:'256x256',type:'image/png'});
   artwork.push({src:TFV_ART,sizes:'96x96',type:'image/png'});
@@ -1028,28 +997,16 @@ function updMS(t){
 }
 function updMSPos(){ if(!('mediaSession' in navigator)||!navigator.mediaSession.setPositionState) return; if(!audio.duration||isNaN(audio.duration)) return; try{ navigator.mediaSession.setPositionState({ duration:audio.duration, playbackRate:audio.playbackRate||1, position:Math.min(audio.currentTime,audio.duration) }); }catch{} }
 
-
-/* ══════════════════════════════════════════════════════════════════
-   NOTIFICACIONES DE REPRODUCCIÓN
-   
-   La API Notification de WebView requiere que requestPermission()
-   se llame DESDE UN CLICK DIRECTO del usuario, no desde código async.
-   Por eso mostramos un banner dedicado con un botón "Activar".
-   ══════════════════════════════════════════════════════════════════ */
 let _notif=null, _notifGranted=false;
 
-/* Inicializar: verificar permisos y probar notificación directa */
 (function(){
   if(!('Notification' in window)) return;
   var perm=Notification.permission;
   if(perm==='granted'){
     _notifGranted=true;
   } else if(perm==='default'){
-    /* Esperar hasta primer play para pedir — timing es crítico */
     setTimeout(showNotifBanner, 2000);
   }
-  /* También intentar notificación TEST directa (funciona en algunos WebView
-     cuando Android settings ya lo permite aunque JS diga 'default') */
   setTimeout(function(){
     if(_notifGranted) return;
     try{
@@ -1061,9 +1018,7 @@ let _notif=null, _notifGranted=false;
       });
       _notifGranted=true;
       setTimeout(function(){ try{test.close();}catch(e){} },2000);
-    }catch(e){
-      /* Si falla → necesitamos que el usuario active manualmente */
-    }
+    }catch(e){}
   },3000);
 })();
 
@@ -1080,17 +1035,14 @@ function showNotifBanner(){
   document.head.insertAdjacentHTML('beforeend','<style>@keyframes notifBannerIn{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}</style>');
   document.body.appendChild(b);
 
-  /* ── BOTÓN ACTIVAR: llamada SINCRÓNICA desde click ── */
   document.getElementById('notif-allow').addEventListener('click',function(){
     b.remove();
     if(!('Notification' in window)){ showNotifFallback(); return; }
-    /* requestPermission() DIRECTAMENTE en el handler del click — sin await, sin async */
     var result=Notification.requestPermission(function(perm){
       _notifGranted=(perm==='granted');
       if(!_notifGranted) showNotifFallback();
       else toast('✓ Notificaciones activadas','ok');
     });
-    /* Browsers modernos devuelven Promise */
     if(result&&result.then){
       result.then(function(perm){
         _notifGranted=(perm==='granted');
@@ -1103,7 +1055,6 @@ function showNotifBanner(){
 }
 
 function showNotifFallback(){
-  /* Si WebView no permite la API → guiar al usuario a ajustes manualmente */
   openM('<div class="m-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg> Activar notificaciones</div>'
     +'<div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px">Para ver los controles de música en la barra de notificaciones, actívalas manualmente:</div>'
     +'<div style="display:flex;flex-direction:column;gap:8px;font-size:13px">'
@@ -1237,7 +1188,6 @@ function openEdit(tid){
     $('etOk').onclick=async()=>{
       const nm=$('etN').value.trim(),ar=$('etA').value.trim();
       if(nm) t.name=nm; t.artist=ar;
-      /* FIX 2: siempre guardar portada en IDB sin condición de tamaño */
       if(_nc){ t.coverUrl=_nc; await saveCovIdb(t.id,_nc); }
       saveAll(); closeM(); renderAll(); if(curId===t.id) updateUI(); toast('Guardado');
     };
@@ -1260,8 +1210,6 @@ async function openPlaylist(plId){
 
 function confirmDelPl(plId){ const pl=playlists.find(x=>x.id===plId); openM(`<div class="m-title">Eliminar playlist</div><p style="font-size:13px;color:var(--muted);margin-bottom:14px">¿Eliminar <strong style="color:var(--text)">${esc(pl?.name||'')}</strong>?</p><div style="display:flex;justify-content:flex-end;gap:7px"><button id="pdNo" class="btn">Cancelar</button><button id="pdYes" class="btn red">Eliminar</button></div>`, ()=>{ $('pdNo').onclick=closeM; $('pdYes').onclick=async()=>{ if(pl?.covBlobId) try{await dbDel(pl.covBlobId);}catch{} playlists=playlists.filter(x=>x.id!==plId); saveAll(); closeM(); renderPlaylists(); updateCounts(); toast('Playlist eliminada'); }; }); }
 
-
-/* ── Waveform visualizer ── */
 function hexToRgba(hex,a){ const m=hex.replace('#','').match(/.{2}/g); if(!m) return `rgba(168,85,247,${a})`; return `rgba(${parseInt(m[0],16)},${parseInt(m[1],16)},${parseInt(m[2],16)},${a})`; }
 function drawWave(){
   const wc=document.getElementById('waveCanvas');
@@ -1293,7 +1241,6 @@ function drawWave(){
     ctx.roundRect?ctx.roundRect(x+1,H-bh,Math.max(1,bw-2),bh,r):ctx.rect(x+1,H-bh,Math.max(1,bw-2),bh);
     ctx.fill();
   }
-  /* Playhead */
   if(audio.duration&&!isNaN(audio.duration)){
     const pct=audio.currentTime/audio.duration;
     const px=pct*W;
@@ -1303,7 +1250,6 @@ function drawWave(){
     ctx.shadowColor='rgba(255,255,255,.6)';
     ctx.shadowBlur=6;
     ctx.beginPath(); ctx.moveTo(px,0); ctx.lineTo(px,H); ctx.stroke();
-    /* Triangle */
     ctx.fillStyle='rgba(255,255,255,.95)';
     ctx.beginPath();
     ctx.moveTo(px-5*dpr,0);
@@ -1326,17 +1272,14 @@ function openPM(){
   pmRepIco.innerHTML=REP_SVG[rep];
   updSleepChip();
   speedSel.value=String(cfg.speed||1);
-  /* Update blur background */
   const t=tracks.find(x=>x.id===curId);
   const pmBgEl=document.getElementById('pm-bg');
   const pmGradEl=document.getElementById('pm-grad');
   const th=TH[cfg.theme]||TH.purple;
   if(pmBgEl) pmBgEl.style.backgroundImage=t&&t.coverUrl?`url("${t.coverUrl}")`:`linear-gradient(135deg,${th.a2},${th.a})`;
   if(pmGradEl) pmGradEl.style.background=`linear-gradient(180deg,rgba(0,0,0,.18) 0%,rgba(0,0,0,.08) 30%,${th.bg1}dd 100%)`;
-  /* Cover spin */
   const covEl=document.getElementById('pmCover');
   if(covEl){ covEl.classList.toggle('spinning',!audio.paused); covEl.classList.toggle('paused',audio.paused); }
-  /* Waveform canvas seek */
   const wc=document.getElementById('waveCanvas');
   if(wc&&!wc._seekBound){
     wc._seekBound=true;
@@ -1344,9 +1287,7 @@ function openPM(){
     wc.addEventListener('click',wcSeek);
     wc.addEventListener('touchstart',wcSeek,{passive:false});
   }
-  /* Start waveform */
   startWave();
-  /* Lock underlying scroll */
   document.documentElement.style.overflow='hidden';
   document.body.style.overflow='hidden';
 }
@@ -1397,7 +1338,6 @@ pmFav.onclick=()=>{ if(curId) toggleFav(curId); };
 pmDel.onclick=()=>{ if(curId){ closePM(); confirmDel(curId); } };
 const pmEdit=$('pmEdit'); if(pmEdit) pmEdit.onclick=()=>{ if(curId){ closePM(); openEdit(curId); } };
 
-/* Add to playlist from player */
 (function(){
   var btn=document.getElementById('pmAddPl');
   if(!btn) return;
@@ -1425,7 +1365,6 @@ const pmEdit=$('pmEdit'); if(pmEdit) pmEdit.onclick=()=>{ if(curId){ closePM(); 
   };
 })();
 
-
 const AUDIO_EXT=/\.(mp3|wav|ogg|m4a|flac|aac|opus|weba|webm|mp4)$/i;
 fileIn.addEventListener('change',async e=>{
   const allFiles=Array.from(e.target.files||[]);
@@ -1445,7 +1384,6 @@ fileIn.addEventListener('change',async e=>{
 window.addEventListener('keydown',e=>{ if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return; if(e.code==='Space'){ e.preventDefault(); togglePlay(); } else if(e.code==='ArrowRight') audio.currentTime=Math.min(audio.currentTime+5,audio.duration||0); else if(e.code==='ArrowLeft') audio.currentTime=Math.max(audio.currentTime-5,0); else if(e.code==='ArrowUp'){ const v=Math.min(100,+volSlider.value+5); volSlider.value=v; audio.volume=v/100; volPct.textContent=v+'%'; cfg.vol=v; } else if(e.code==='ArrowDown'){ const v=Math.max(0,+volSlider.value-5); volSlider.value=v; audio.volume=v/100; volPct.textContent=v+'%'; cfg.vol=v; } });
 window.addEventListener('beforeunload',saveAll);
 
-
 function _getSavedPos(){
   try{ return JSON.parse(sessionStorage.getItem('tfm_pos')||'null'); }catch(e){ return null; }
 }
@@ -1457,7 +1395,6 @@ async function init(){
   applyAll(); applyCompact(); applyEq(); renderAll();
   if(curId){
     updateUI(); showBar(); setPS(false);
-    /* Restore saved position — load audio silently so seek works */
     const t=tracks.find(x=>x.id===curId);
     const savedPos=_getSavedPos();
     const resumeAt=savedPos&&savedPos.id===curId?savedPos.t:lsGet(K.LST,null)?.pos||0;
@@ -1469,7 +1406,6 @@ async function init(){
           await new Promise(r=>setTimeout(r,80));
           _suppressErr=false;
           audio.currentTime=resumeAt;
-          /* Update progress bar to show correct position */
           if(audio.duration){ const pct=(resumeAt/audio.duration)*100; pbFill.style.width=pct+'%'; pmFill.style.width=pct+'%'; pmCur.textContent=fmt(resumeAt); }
         }
       }catch(e){}
@@ -1493,7 +1429,6 @@ TF.getXP=function(){return parseInt(localStorage.getItem(TF.KEY_XP)||'0');};TF.g
 TF.xpTick=function(){var lvl=TF.getLvl();if(lvl>=TF.MAX_LEVEL)return;var xp=TF.getXP()+60;if(xp>=TF.XP_PER_LEVEL){xp=0;lvl=Math.min(lvl+1,TF.MAX_LEVEL);TF.saveXP(xp,lvl);TF.showLevelUp(lvl);}else TF.saveXP(xp,lvl);};
 TF.xpPct=function(){var lvl=TF.getLvl();if(lvl>=TF.MAX_LEVEL)return 100;return Math.round((TF.getXP()/TF.XP_PER_LEVEL)*100);};
 TF.startTicker=function(){if(TF._ticker)return;TF._ticker=setInterval(TF.xpTick,60000);};
-/* MediaSession heartbeat - keeps Android notification alive */
 (function(){
   setInterval(function(){
     if(typeof audio!=='undefined'&&!audio.paused&&'mediaSession' in navigator){
@@ -1508,7 +1443,10 @@ TF.saveUser=function(u){localStorage.setItem(TF.KEY_USER,JSON.stringify(u));};
 TF.showLevelUp=function(lvl){var rank=TF.getRank(lvl);var user=TF.getUser();var name=(user&&user.name)||'Usuario';var isMax=lvl>=TF.MAX_LEVEL;var el=document.createElement('div');el.style.cssText='position:fixed;top:14px;right:14px;z-index:9999;max-width:260px;opacity:0;transform:translateX(20px) scale(.96);transition:all .3s cubic-bezier(.22,1,.36,1);pointer-events:none';el.innerHTML='<div style="background:linear-gradient(135deg,rgba(10,2,28,.97),rgba(20,5,45,.97));border:1px solid rgba(168,85,247,.5);border-radius:14px;overflow:hidden;box-shadow:0 12px 40px rgba(109,36,217,.4)"><div style="height:2px;background:linear-gradient(90deg,transparent,#a855f7,#6d24d9,transparent)"></div><div style="padding:12px 14px;display:flex;align-items:center;gap:10px"><div style="width:40px;height:40px;border-radius:10px;background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3);display:grid;place-items:center;font-size:20px">'+rank.icon+'</div><div><div style="font-size:9px;font-weight:800;color:#a855f7;margin-bottom:2px">'+(isMax?'🏆 NIVEL MÁXIMO':'⚡ SUBISTE DE NIVEL')+'</div><div style="font-size:13px;font-weight:800;color:#fff">'+name+'</div><div style="font-size:10.5px;color:rgba(255,255,255,.5)">'+rank.label+' · Nivel '+lvl+'</div></div></div></div>';document.body.appendChild(el);requestAnimationFrame(function(){requestAnimationFrame(function(){el.style.opacity='1';el.style.transform='translateX(0) scale(1)';});});setTimeout(function(){el.style.opacity='0';el.style.transform='translateX(20px) scale(.96)';setTimeout(function(){el.remove();},350);},isMax?6000:4000);};
 TF.NAV_CSS='#tf-nav{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:8000;display:flex;align-items:center;gap:2px;background:rgba(8,0,18,.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:6px 8px;box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 0 1px rgba(168,85,247,.08)}.tf-nb{display:flex;flex-direction:column;align-items:center;gap:3px;width:54px;height:46px;border-radius:16px;border:none;background:transparent;cursor:pointer;color:rgba(255,255,255,.38);transition:all .2s cubic-bezier(.34,1.56,.64,1);position:relative;padding:0}.tf-nb.on{color:#a855f7;background:rgba(168,85,247,.12)}.tf-nb.on .tf-nb-dot{opacity:1}.tf-nb svg{flex-shrink:0}.tf-nb-lbl{font-size:9px;font-weight:600;font-family:-apple-system,sans-serif}.tf-nb-dot{position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#a855f7;opacity:0}body{padding-bottom:calc(82px + env(safe-area-inset-bottom,0px)) !important}';
 TF.NAV_SVGs={home:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>',music:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>',browser:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>',games:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="4"></rect><path d="M6 12h4M8 10v4"></path><circle cx="16" cy="11" r="1" fill="currentColor" stroke="none"></circle><circle cx="18" cy="13" r="1" fill="currentColor" stroke="none"></circle></svg>',walls:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>',tv:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"></rect><path d="M9 3h6M12 7v2"></path></svg>'};
-TF.injectNav=function(activeSection){var style=document.createElement('style');style.textContent=TF.NAV_CSS;document.head.appendChild(style);var nav=document.createElement('div');nav.id='tf-nav';var order=['home','music','browser','games','walls','tv'];var goMap={home:TF.SECTIONS.hub.go,music:TF.SECTIONS.music.go,browser:TF.SECTIONS.core.go,games:TF.SECTIONS.games.go,walls:TF.SECTIONS.walls.go,tv:'tv.html'};var labels={home:'Inicio',music:'Música',browser:'Navegar',games:'Juegos',walls:'Wallpapers',tv:'TFTV'};order.forEach(function(key){var btn=document.createElement('button');btn.className='tf-nb'+(key===activeSection?' on':'');btn.innerHTML=TF.NAV_SVGs[key]+'<span class="tf-nb-lbl">'+labels[key]+'</span><div class="tf-nb-dot"></div>';btn.onclick=function(){if(key===activeSection)return;window.location.href=goMap[key];};nav.appendChild(btn);});document.body.appendChild(nav);var mini=document.createElement('div');mini.id='tf-mini';mini.innerHTML='<div id="tf-mini-art"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(168,85,247,.6)" stroke-width="1.8"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle></svg></div><div id="tf-mini-info"><div id="tf-mini-title">Sin reproducción</div><div id="tf-mini-artist">TFMusic</div></div><button class="tf-mini-btn" id="tf-mini-close" style="color:rgba(255,255,255,.3)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button><div id="tf-mini-prog"><div id="tf-mini-bar"></div></div>';document.body.appendChild(mini);TF.syncMini();document.getElementById('tf-mini-close').onclick=function(){localStorage.removeItem('tfmp_now');document.getElementById('tf-mini').classList.remove('show');};};
+TF.injectNav=function(activeSection){var style=document.createElement('style');style.textContent=TF.NAV_CSS;document.head.appendChild(style);var nav=document.createElement('div');nav.id='tf-nav';var order=['home','music','browser','games','walls','tv'];
+/* ── FIX: URLs relativas que funcionan en browser Y en AppCreator WebView ── */
+var goMap={home:'hub.html',music:'music.html',browser:'core.html',games:'games.html',walls:'walls.html',tv:'tv.html'};
+var labels={home:'Inicio',music:'Música',browser:'Navegar',games:'Juegos',walls:'Wallpapers',tv:'TFTV'};order.forEach(function(key){var btn=document.createElement('button');btn.className='tf-nb'+(key===activeSection?' on':'');btn.innerHTML=TF.NAV_SVGs[key]+'<span class="tf-nb-lbl">'+labels[key]+'</span><div class="tf-nb-dot"></div>';btn.onclick=function(){if(key===activeSection)return;window.location.href=goMap[key];};nav.appendChild(btn);});document.body.appendChild(nav);var mini=document.createElement('div');mini.id='tf-mini';mini.innerHTML='<div id="tf-mini-art"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(168,85,247,.6)" stroke-width="1.8"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle></svg></div><div id="tf-mini-info"><div id="tf-mini-title">Sin reproducción</div><div id="tf-mini-artist">TFMusic</div></div><button class="tf-mini-btn" id="tf-mini-close" style="color:rgba(255,255,255,.3)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button><div id="tf-mini-prog"><div id="tf-mini-bar"></div></div>';document.body.appendChild(mini);TF.syncMini();document.getElementById('tf-mini-close').onclick=function(){localStorage.removeItem('tfmp_now');document.getElementById('tf-mini').classList.remove('show');};};
 TF.syncMini=function(){try{var now=JSON.parse(localStorage.getItem('tfmp_now')||'null');var mini=document.getElementById('tf-mini');if(!mini)return;if(!now){mini.classList.remove('show');return;}mini.classList.add('show');var te=document.getElementById('tf-mini-title');var ae=document.getElementById('tf-mini-artist');if(te)te.textContent=now.title||'Sin título';if(ae)ae.textContent=now.artist||'TFMusic';}catch(e){}};
 TF.toast=function(msg,type,ms){var cont=document.getElementById('tf-toast-cont');if(!cont){cont=document.createElement('div');cont.id='tf-toast-cont';cont.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9998;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none;width:max-content;max-width:88vw';document.body.appendChild(cont);}var el=document.createElement('div');var bc=type==='ok'?'rgba(74,222,128,.3)':type==='err'?'rgba(244,63,94,.3)':'rgba(255,255,255,.1)';el.style.cssText='background:rgba(6,0,13,.97);border:1px solid '+bc+';border-radius:10px;padding:8px 14px;font-size:12.5px;color:#fff;opacity:0;transform:translateY(6px);transition:opacity .16s,transform .16s;font-family:-apple-system,sans-serif';el.textContent=msg;cont.appendChild(el);requestAnimationFrame(function(){requestAnimationFrame(function(){el.style.opacity='1';el.style.transform='translateY(0)';});});setTimeout(function(){el.style.opacity='0';el.style.transform='translateY(6px)';setTimeout(function(){el.remove();},200);},ms||2000);};
 TF.showLogin=function(onSuccess){if(document.getElementById('tf-login-modal'))return;var u=TF.getUser();var isEdit=!!u;var modal=document.createElement('div');modal.id='tf-login-modal';modal.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.75);backdrop-filter:blur(16px);display:flex;align-items:flex-end;justify-content:center';var avHtml=u&&u.avatar?'<img src="'+u.avatar+'" style="width:68px;height:68px;border-radius:50%;object-fit:cover;display:block"/>':'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(168,85,247,.6)" stroke-width="1.6" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';modal.innerHTML='<div style="width:min(100%,440px);background:rgba(6,0,13,.99);border:1px solid rgba(255,255,255,.09);border-radius:18px 18px 0 0;padding:20px;display:flex;flex-direction:column;gap:14px"><div style="font-size:15px;font-weight:800;color:#eee8f8">'+(isEdit?'Editar perfil':'Bienvenido')+'</div><div style="display:flex;flex-direction:column;align-items:center;gap:8px"><div id="tf-av-preview" style="width:72px;height:72px;border-radius:50%;background:rgba(109,36,217,.15);border:2px solid rgba(168,85,247,.3);display:grid;place-items:center;overflow:hidden;cursor:pointer" onclick="document.getElementById(\'tf-av-file\').click()">'+avHtml+'</div><input type="file" id="tf-av-file" accept="image/*" style="display:none"/></div><div><div style="font-size:11px;color:#7a6e98;margin-bottom:6px;font-weight:600">Nombre</div><input id="tf-login-name" type="text" placeholder="Tu nombre..." maxlength="24" value="'+(u&&u.name?u.name:'')+'" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:10px 12px;color:#eee8f8;font-size:13.5px;font-family:-apple-system,sans-serif;outline:none"/></div>'+(!isEdit?'<div><div style="font-size:11px;color:#7a6e98;margin-bottom:6px;font-weight:600">Contraseña</div><input id="tf-login-pass" type="password" placeholder="Mínimo 4 caracteres..." style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:10px 12px;color:#eee8f8;font-size:13.5px;font-family:-apple-system,sans-serif;outline:none"/></div>':'')+'<button id="tf-login-submit" style="padding:12px;border-radius:11px;background:linear-gradient(135deg,#6d24d9,#a855f7);border:none;color:#fff;font-size:13.5px;font-weight:800;font-family:-apple-system,sans-serif;cursor:pointer">'+(isEdit?'Guardar':'Crear perfil')+'</button></div>';document.body.appendChild(modal);var avFile=document.getElementById('tf-av-file');var avPreview=document.getElementById('tf-av-preview');var _newAvatar=u&&u.avatar?u.avatar:null;avFile.onchange=function(){var f=avFile.files[0];if(!f)return;var r=new FileReader();r.onload=function(){_newAvatar=r.result;avPreview.innerHTML='<img src="'+r.result+'" style="width:72px;height:72px;border-radius:50%;object-fit:cover;display:block"/>';};r.readAsDataURL(f);};document.getElementById('tf-login-submit').onclick=function(){var name=(document.getElementById('tf-login-name').value||'').trim();if(!name){TF.toast('Escribe tu nombre','err');return;}if(!isEdit){var pass=(document.getElementById('tf-login-pass').value||'').trim();if(pass.length<4){TF.toast('Mínimo 4 caracteres','err');return;}TF.saveUser({name:name,pass:pass,avatar:_newAvatar});}else{var ex=TF.getUser()||{};ex.name=name;ex.avatar=_newAvatar;TF.saveUser(ex);}modal.remove();TF.toast((isEdit?'Perfil actualizado':'Bienvenido, '+name+'!'),'ok');TF.updateProfileUI();if(onSuccess)onSuccess();};modal.onclick=function(e){if(e.target===modal)modal.remove();};};
@@ -1535,7 +1473,7 @@ TF.requireLogin=function(){var user=TF.getUser();if(user)return true;TF.toast('I
 TF.init=function(sectionKey){TF.injectNav(sectionKey);TF.injectProfile();TF.startTicker();setInterval(TF.syncMini,3000);var user=TF.getUser();if(!user){setTimeout(function(){TF.showLogin();},800);}};
 TF.init("music");
 (function(){var _h=function(){var m=document.getElementById("tf-mini");if(m){m.style.display="none!important";m.style.cssText="display:none!important";}};_h();setTimeout(_h,100);})();
-(function(){document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'){try{sessionStorage.setItem('tf_scroll_'+location.href,window.scrollY);}catch(e){}}else{try{var saved=sessionStorage.getItem('tf_scroll_'+location.href);if(saved)window.scrollTo(0,parseInt(saved));}catch(e){}if(window.TF&&TF.syncMini)TF.syncMini();}});window.addEventListener('pageshow',function(e){if(e.persisted){try{var saved=sessionStorage.getItem('tf_scroll_'+location.href);if(saved)window.scrollTo(0,parseInt(saved));}catch(e){}}});})();
+(function(){document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'){try{sessionStorage.setItem('tf_scroll_'+location.href,window.scrollY);}catch(e){}}else{try{var saved=sessionStorage.getItem('tf_scroll_'+location.href);if(saved)window.scrollTo(0,parseInt(saved));}catch(e){}if(window.TF&&TF.syncMini)TF.syncMini();}});window.addEventListener('pageshow',function(e){if(e.persisted){try{var saved=sessionStorage.getItem('tf_scroll_'+location.href);if(saved)window.scrollTo(0,parseInt(saved));}catch(e){}}}); })();
 </script>
 </body>
 </html>
