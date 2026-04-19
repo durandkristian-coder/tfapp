@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,viewport-fit=cover"/>
+<title>TFReader</title>
+<style>
+:root{--bg:#06000f;--bg2:#0a0020;--ac:#a855f7;--pink:#e91e8c;--bd:rgba(255,255,255,.08);--mu:rgba(255,255,255,.45);--gr:#22c55e;--rd:#f43f5e;--go:#f59e0b;--tx:#ede8f8;--safe:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--tx);overflow-x:hidden}
+body{background:radial-gradient(ellipse at 20% 0%,#120030,#0a0020 35%,var(--bg) 70%) fixed}
+
+/* HEADER */
+#hdr{position:fixed;top:0;left:0;right:0;z-index:400;height:52px;display:flex;align-items:center;padding:0 12px;gap:8px;overflow:hidden}
+#hdr.s{background:rgba(6,0,15,.96);backdrop-filter:blur(18px);border-bottom:1px solid var(--bd)}
+#hLogo{display:flex;align-items:center;gap:6px;cursor:pointer;flex-shrink:0;text-decoration:none}
+#hLogo span{font-size:15px;font-weight:900;background:linear-gradient(90deg,#e9d5ff,var(--ac));-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+#hSearch{flex:1;min-width:0;height:30px;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);border:1px solid var(--bd);border-radius:8px;padding:0 9px}
+#hSearch:focus-within{border-color:rgba(168,85,247,.4)}
+#hSIn{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--tx);font-size:12px;font-family:inherit}
+#hSIn::placeholder{color:var(--mu)}
+#hSCl{background:none;border:none;color:var(--mu);cursor:pointer;display:none;line-height:0;flex-shrink:0}
+.hb{width:30px;height:30px;min-width:30px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid var(--bd);display:grid;place-items:center;cursor:pointer;color:var(--tx);flex-shrink:0;position:relative}
+
+/* HERO */
+#heroW{position:relative;overflow:hidden;margin-top:52px}
+#heroSl{display:flex;transition:transform .5s cubic-bezier(.22,1,.36,1)}
+.hs{flex:0 0 100%;position:relative;height:calc(100vw*.58 + 76px);min-height:260px;max-height:420px;overflow:hidden}
+.hs img{width:100%;height:100%;object-fit:cover;filter:brightness(.45)}
+.hsg{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.1),transparent 40%,rgba(6,0,15,.7) 70%,var(--bg) 100%)}
+.hsb{position:absolute;bottom:0;left:0;right:0;padding:12px 14px 14px}
+.hst{font-size:20px;font-weight:900;line-height:1.15;text-shadow:0 2px 8px rgba(0,0,0,.7);margin-bottom:8px}
+.hsbtn{height:33px;padding:0 15px;border-radius:8px;background:linear-gradient(135deg,var(--pink),var(--ac));border:none;color:#fff;font-size:12.5px;font-weight:800;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:5px;box-shadow:0 3px 12px rgba(233,30,140,.38)}
+#hDots{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:2}
+.hd{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.3);transition:all .25s}
+.hd.on{width:15px;border-radius:3px;background:var(--ac)}
+
+/* CATS */
+#catBar{position:relative;z-index:300;background:rgba(6,0,15,.95);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.08);padding:8px 14px 7px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+#catBar::-webkit-scrollbar{display:none}
+.cp{flex:0 0 auto;height:26px;padding:0 13px;border-radius:99px;border:1px solid rgba(255,255,255,.14);background:transparent;color:var(--mu);cursor:pointer;font-size:11.5px;font-weight:600;font-family:inherit;white-space:nowrap;transition:all .14s}
+.cp.on{background:linear-gradient(135deg,rgba(233,30,140,.14),rgba(168,85,247,.18));border-color:rgba(233,30,140,.6);color:#f9a8d4}
+
+/* ROWS */
+#main{padding-bottom:calc(72px + var(--safe));min-height:60vh}
+.row{margin-bottom:20px}
+.rowH{display:flex;align-items:center;justify-content:space-between;padding:0 14px;margin-bottom:7px}
+.rowT{font-size:14px;font-weight:800}
+.rowS{display:flex;gap:8px;overflow-x:auto;padding:2px 14px 4px;scrollbar-width:none}
+.rowS::-webkit-scrollbar{display:none}
+
+/* CARDS */
+.pc{flex:0 0 94px;border-radius:8px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.03);border:1px solid var(--bd);position:relative;flex-shrink:0}
+.pc:active{opacity:.8}
+.pca{width:100%;aspect-ratio:2/3;overflow:hidden;background:rgba(109,36,217,.1);position:relative}
+.pca img{width:100%;height:100%;object-fit:cover;display:block}
+.pct{font-size:9px;font-weight:600;padding:4px 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb{position:absolute;top:3px;left:3px;font-size:7px;font-weight:800;padding:1px 5px;border-radius:3px;text-transform:uppercase;z-index:2}
+.tb-m{background:rgba(239,68,68,.85);color:#fff}
+.tb-mh{background:rgba(34,197,94,.85);color:#fff}
+.tb-c{background:rgba(59,130,246,.85);color:#fff}
+.ph{width:100%;aspect-ratio:2/3;background:rgba(109,36,217,.1);display:grid;place-items:center}
+.cwc{flex:0 0 168px;border-radius:9px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.04);border:1px solid var(--bd);flex-shrink:0;position:relative}
+.cwc img{width:100%;aspect-ratio:3/2;object-fit:cover;display:block;object-position:top}
+.cwci{padding:5px 8px 8px}
+.cwct{font-size:10px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cwcc{font-size:9px;color:var(--mu);margin-top:1px}
+.cwdel{position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:4px;background:rgba(0,0,0,.72);display:grid;place-items:center;cursor:pointer;z-index:2;color:var(--rd)}
+.t10c{flex:0 0 112px;flex-shrink:0;cursor:pointer;position:relative;height:112px}
+.t10c img{position:absolute;right:0;top:0;width:72px;height:112px;object-fit:cover;border-radius:7px;display:block;object-position:top}
+.t10n{position:absolute;left:0;bottom:-4px;font-size:66px;font-weight:900;line-height:1;background:linear-gradient(135deg,var(--pink),var(--ac),#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-4px;user-select:none;font-family:"Arial Black",Impact,sans-serif}
+.sk{border-radius:8px;animation:sk 1.2s ease-in-out infinite;background:rgba(255,255,255,.06)}
+.sk-p{width:94px;aspect-ratio:2/3}
+.sk-cw{width:168px;height:98px}
+@keyframes sk{0%,100%{opacity:.2}50%{opacity:.55}}
+
+/* SEARCH */
+#srchV{display:none;position:fixed;inset:0;z-index:350;background:var(--bg);padding:60px 0 20px;overflow-y:auto}
+#srchG{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:0 10px}
+@media(min-width:400px){#srchG{grid-template-columns:repeat(4,1fr)}}
+.sgc{border-radius:8px;overflow:hidden;cursor:pointer;background:rgba(255,255,255,.03);border:1px solid var(--bd);position:relative}
+.sgc img{width:100%;aspect-ratio:2/3;object-fit:cover;display:block;object-position:top}
+.sgct{font-size:9px;font-weight:600;padding:3px 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sinf{padding:24px 14px;text-align:center;color:var(--mu);font-size:12px}
+
+/* DETAIL */
+#detBd{position:fixed;inset:0;z-index:500;background:var(--bg);display:none;flex-direction:column}
+#detBd.open{display:flex}
+#detSc{flex:1;overflow-y:auto;scrollbar-width:none}
+#detSc::-webkit-scrollbar{display:none}
+.dh{position:relative;width:100%;height:210px;overflow:hidden;background:rgba(109,36,217,.1)}
+.dh img{width:100%;height:100%;object-fit:cover;display:block;object-position:top}
+.dhg{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.15),rgba(6,0,15,.99))}
+.dbk{position:fixed;top:12px;left:12px;width:30px;height:30px;border-radius:7px;background:rgba(0,0,0,.65);border:1px solid rgba(255,255,255,.15);display:grid;place-items:center;cursor:pointer;color:#fff;z-index:2}
+.dby{padding:0 14px 16px}
+.dttl{font-size:18px;font-weight:900;margin-bottom:4px;line-height:1.2}
+.dmt{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:9px}
+.dbg{font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:var(--mu)}
+.dbg.gr{color:var(--gr);background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.2)}
+.dbtns{display:flex;gap:7px;margin-bottom:11px}
+.drd{flex:1;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--pink),var(--ac));border:none;color:#fff;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 3px 14px rgba(233,30,140,.3)}
+.dls{width:40px;height:40px;border-radius:10px;background:rgba(233,30,140,.08);border:1.5px solid rgba(233,30,140,.45);display:grid;place-items:center;cursor:pointer;flex-shrink:0;color:#ec4899}
+.dls.on{background:rgba(168,85,247,.12);border-color:rgba(168,85,247,.4);color:var(--ac)}
+.ddsc{font-size:11.5px;color:var(--mu);line-height:1.65;margin-bottom:9px;max-height:66px;overflow:hidden;transition:max-height .28s}
+.ddsc.exp{max-height:300px}
+.dmore{font-size:10px;color:var(--ac);cursor:pointer;margin-bottom:9px}
+.dgs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:11px}
+.dg{font-size:8.5px;padding:2px 7px;border-radius:99px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25);color:var(--ac)}
+.dsec{font-size:9px;font-weight:700;color:var(--ac);letter-spacing:.08em;text-transform:uppercase;margin:11px 0 6px}
+.chlist{display:flex;flex-direction:column;gap:3px;max-height:320px;overflow-y:auto;scrollbar-width:none}
+.chlist::-webkit-scrollbar{display:none}
+.chr{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--bd);cursor:pointer;transition:background .12s}
+.chr:active{background:rgba(109,36,217,.1);border-color:rgba(168,85,247,.3)}
+.chn{font-size:9px;font-weight:800;color:var(--ac);min-width:38px;flex-shrink:0}
+.chnm{font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chd{font-size:9px;color:var(--mu);flex-shrink:0}
+.chk{font-size:10px;color:var(--gr);flex-shrink:0}
+.chr.cur{background:rgba(168,85,247,.1);border-color:rgba(168,85,247,.3)}
+.chr.ext{border-style:dashed;opacity:.8}
+.nodata{padding:12px;font-size:11px;color:var(--mu);text-align:center;line-height:1.7}
+.sp{width:20px;height:20px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--ac);border-radius:50%;animation:spn .6s linear infinite;margin:16px auto;display:block}
+@keyframes spn{to{transform:rotate(360deg)}}
+
+/* READER */
+#rdr{position:fixed;inset:0;z-index:600;background:#0a0a0a;display:none;flex-direction:column}
+#rdr.open{display:flex}
+#rScr{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;display:none;touch-action:pan-y pinch-zoom}
+#rScr::-webkit-scrollbar{display:none}
+#rScr img{width:100%;display:block;max-width:800px;margin:0 auto}
+#rPg{flex:1;overflow:hidden;display:none;position:relative;background:#0a0a0a}
+#rPgImg{width:100%;height:100%;object-fit:contain;display:block;touch-action:manipulation pinch-zoom}
+#rPgPrev{position:absolute;top:0;left:0;width:38%;height:100%;cursor:pointer;z-index:2}
+#rPgNext{position:absolute;top:0;right:0;width:62%;height:100%;cursor:pointer;z-index:2}
+#rPgN{position:absolute;bottom:52px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);border-radius:99px;padding:3px 12px;font-size:11px;color:rgba(255,255,255,.7);z-index:3;pointer-events:none}
+#rLoadO{position:absolute;inset:0;z-index:10;background:rgba(0,0,0,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+#rLoadO.gone{display:none}
+#rLMsg{font-size:12px;color:rgba(255,255,255,.6);text-align:center;padding:0 20px;line-height:1.6}
+.rb{display:none;height:32px;padding:0 18px;border-radius:8px;border:none;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700}
+#rRtry{background:linear-gradient(135deg,var(--pink),var(--ac));color:#fff}
+#rExtO{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff}
+/* Controls overlay */
+#rCtrl{position:fixed;inset:0;z-index:610;display:none;pointer-events:none;transition:opacity .3s}
+#rCtrl.h{opacity:0!important}
+#rTop{position:absolute;top:0;left:0;right:0;padding:10px 12px;background:linear-gradient(to bottom,rgba(0,0,0,.93),transparent);display:flex;align-items:center;gap:7px;pointer-events:all}
+#rBk{width:30px;height:30px;border-radius:7px;background:rgba(255,255,255,.1);border:none;display:grid;place-items:center;cursor:pointer;color:#fff;flex-shrink:0}
+#rTitl{flex:1;font-size:11.5px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rcb{width:30px;height:30px;border-radius:7px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);display:grid;place-items:center;cursor:pointer;color:#fff;flex-shrink:0}
+.rcb.on{background:linear-gradient(135deg,rgba(233,30,140,.5),rgba(168,85,247,.5));border-color:rgba(233,30,140,.6)}
+#rBot{position:absolute;bottom:0;left:0;right:0;padding:10px 12px;background:linear-gradient(to top,rgba(0,0,0,.93),transparent);display:flex;align-items:center;gap:7px;pointer-events:all}
+.rchb{height:28px;padding:0 10px;border-radius:6px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.07);color:#fff;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px}
+.rchb:disabled{opacity:.3;cursor:default}
+#rNxtCh{background:linear-gradient(135deg,rgba(233,30,140,.35),rgba(168,85,247,.35));border-color:rgba(168,85,247,.5)}
+#rCpSel{flex:1;background:rgba(255,255,255,.06);border:1px solid var(--bd);border-radius:6px;color:var(--tx);font-size:10px;font-family:inherit;padding:4px 6px;cursor:pointer;outline:none;text-align:center}
+option{background:#06000d}
+
+/* MY LIST */
+#mlBd{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(14px);display:none;align-items:flex-end;justify-content:center}
+#mlBd.open{display:flex}
+#mlBox{width:min(100%,540px);max-height:68vh;background:rgba(6,0,15,.99);border:1px solid var(--bd);border-radius:13px 13px 0 0;display:flex;flex-direction:column;overflow:hidden}
+.mlhdr{display:flex;align-items:center;justify-content:space-between;padding:13px 14px;border-bottom:1px solid var(--bd);flex-shrink:0;font-size:13px;font-weight:800}
+#mlGr{flex:1;overflow-y:auto;padding:11px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.mlc{border-radius:7px;overflow:hidden;cursor:pointer;position:relative;background:rgba(255,255,255,.03);border:1px solid var(--bd)}
+.mlc img{width:100%;aspect-ratio:2/3;object-fit:cover;display:block;object-position:top}
+.mlct{font-size:8.5px;font-weight:600;padding:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mlx{position:absolute;top:2px;right:2px;width:15px;height:15px;border-radius:3px;background:rgba(0,0,0,.75);display:grid;place-items:center;color:var(--rd);font-size:9px;cursor:pointer;z-index:2}
+
+/* SETTINGS */
+#settBd{position:fixed;inset:0;z-index:710;background:rgba(0,0,0,.75);backdrop-filter:blur(14px);display:none;align-items:flex-end;justify-content:center}
+#settBd.open{display:flex}
+#settBox{width:min(100%,480px);background:rgba(6,0,15,.99);border:1px solid var(--bd);border-radius:13px 13px 0 0;padding:16px 14px;display:flex;flex-direction:column;gap:12px}
+.srow{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid var(--bd)}
+.slbl{flex:1}.slbl b{display:block;font-size:13px;font-weight:700;margin-bottom:2px}.slbl small{font-size:10.5px;color:var(--mu)}
+.tog{width:38px;height:21px;border-radius:10px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);position:relative;transition:background .2s;flex-shrink:0;cursor:pointer}
+.tog.on{background:linear-gradient(135deg,var(--pink),var(--ac));border-color:rgba(233,30,140,.5)}
+.tog::after{content:'';position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;transition:left .2s}
+.tog.on::after{left:20px}
+
+#tst{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;align-items:center;gap:3px;pointer-events:none}
+.toast{background:rgba(4,0,12,.98);border:1px solid rgba(255,255,255,.09);border-radius:8px;padding:7px 13px;font-size:11.5px;color:#fff;opacity:0;transform:translateY(4px);transition:all .15s;white-space:nowrap}
+.toast.s{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<header id="hdr">
+  <div id="hLogo">
+    <img src="https://i.imgur.com/lALmGx6.png" width="26" height="26" style="border-radius:6px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'"/>
+    <span>TFReader</span>
+  </div>
+  <div id="hSearch">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--mu)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+    <input id="hSIn" type="search" placeholder="Buscar manga, manhwa…" autocomplete="off" spellcheck="false"/>
+    <button id="hSCl"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+  </div>
+  <button class="hb" id="mlBtn">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+    <span id="mlCnt" style="position:absolute;top:-3px;right:-3px;width:13px;height:13px;border-radius:50%;background:var(--ac);font-size:7px;font-weight:800;display:none;place-items:center;color:#fff"></span>
+  </button>
+  <button class="hb" id="settBtn">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+  </button>
+</header>
+
+<div id="heroW"><div id="heroSl"></div><div id="hDots"></div></div>
+
+<div id="catBar">
+  <button class="cp on" data-cat="todo">Todo</button>
+  <button class="cp" data-cat="manga">Manga</button>
+  <button class="cp" data-cat="manhwa">Manhwa</button>
+  <button class="cp" data-cat="comic">Cómics</button>
+</div>
+
+<div id="main"><div id="rows"></div></div>
+<div id="srchV"><div id="srchG"></div><div id="srchI"></div></div>
+
+<!-- DETAIL -->
+<div id="detBd">
+  <div id="detSc">
+    <div class="dh"><img id="dImg" src="" alt=""/><div class="dhg"></div>
+      <button class="dbk" id="dBk">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"></path></svg>
+      </button>
+    </div>
+    <div class="dby" id="dBy"><div class="sp"></div></div>
+  </div>
+</div>
+
+<!-- READER -->
+<div id="rdr">
+  <div id="rScr"></div>
+  <div id="rPg">
+    <img id="rPgImg" src="" alt=""/>
+    <div id="rPgPrev"></div><div id="rPgNext"></div>
+    <div id="rPgN">1/1</div>
+  </div>
+  <div id="rLoadO">
+    <div class="sp"></div>
+    <div id="rLMsg">Cargando capítulo…</div>
+    <button class="rb" id="rRtry">Reintentar</button>
+    <button class="rb" id="rExtO">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-right:4px"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+      Abrir en MangaDex
+    </button>
+  </div>
+</div>
+<!-- Reader controls -->
+<div id="rCtrl" class="h">
+  <div id="rTop">
+    <button id="rBk">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+    </button>
+    <div id="rTitl">—</div>
+    <button class="rcb" id="rModeB" title="Cambiar modo de lectura">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="18" rx="1"></rect><rect x="14" y="3" width="7" height="18" rx="1"></rect></svg>
+    </button>
+    <button class="rcb" id="rFsB" title="Pantalla completa">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+    </button>
+  </div>
+  <div id="rBot">
+    <button class="rchb" id="rPrvCh" disabled>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      Ant.
+    </button>
+    <select id="rCpSel"></select>
+    <button class="rchb" id="rNxtCh" disabled>
+      Sig.
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </button>
+  </div>
+</div>
+
+<!-- MY LIST -->
+<div id="mlBd">
+  <div id="mlBox">
+    <div class="mlhdr">
+      <span>Mi Lista <span id="mlTot" style="font-size:10px;color:var(--mu);font-weight:400"></span></span>
+      <button class="hb" id="mlCls" style="width:26px;height:26px">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+      </button>
+    </div>
+    <div id="mlGr"></div>
+    <div id="mlEmp" style="display:none;padding:28px;text-align:center;color:var(--mu);font-size:12px">Tu lista está vacía</div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div id="settBd">
+  <div id="settBox">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <span style="font-size:14px;font-weight:800">Configuración</span>
+      <button class="hb" id="settCls" style="width:26px;height:26px">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+      </button>
+    </div>
+    <div class="srow"><div class="slbl"><b>Contenido +18</b><small>Solo en búsquedas, nunca en el catálogo</small></div><div class="tog" id="nsfwT"></div></div>
+    <div class="srow"><div class="slbl"><b>Modo de lectura</b><small>Activo = página por página · Inactivo = cascada</small></div><div class="tog" id="modeT"></div></div>
+  </div>
+</div>
+
+<div id="tst"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ═══════════════════════════════════════════════
+   MangaDex API — gratuita, sin key, CORS abierto
+   ═══════════════════════════════════════════════ */
+var MD  = 'https://api.mangadex.org';
+var MDI = 'https://uploads.mangadex.org';
+
+/* Config */
+var C = {nsfw:false, pg:false};
+try{var _c=JSON.parse(localStorage.getItem('tfr_c')||'{}');C.nsfw=!!_c.nsfw;C.pg=!!_c.pg;}catch(e){}
+function saveC(){localStorage.setItem('tfr_c',JSON.stringify(C));}
+
+/* Content rating */
+function CR(nsfw){return nsfw?['safe','suggestive','erotica','pornographic']:['safe','suggestive'];}
+
+/* Fetch — manual timeout, compatible con todos los Android WebView */
+function F(url,ms){
+  ms=ms||14000;
+  return new Promise(function(ok,fail){
+    var done=false,t=setTimeout(function(){done||(done=true,fail(new Error('timeout')));},ms);
+    fetch(url).then(function(r){done||(done=true,clearTimeout(t),ok(r));}).catch(function(e){done||(done=true,clearTimeout(t),fail(e));});
+  });
+}
+
+/* Construir query string para MangaDex */
+function QS(obj){
+  var p=[];
+  Object.keys(obj).forEach(function(k){
+    var v=obj[k];
+    if(Array.isArray(v))v.forEach(function(x){p.push(k+'%5B%5D='+encodeURIComponent(x));});
+    else p.push(encodeURIComponent(k)+'='+encodeURIComponent(v));
+  });
+  return p.join('&');
+}
+
+async function GET(path,params){
+  var r=await F(MD+path+(params?'?'+QS(params):''));
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  return r.json();
+}
+/* ═══════════════════════════════════════════════════════════
+   COMICK.FUN via TFReader proxy (proxy propio = sin CORS)
+   URL: https://tfreader-proxy.onrender.com/proxy?url=ENCODED_URL
+   ═══════════════════════════════════════════════════════════ */
+var CK='https://api.comick.fun';
+var CKI='https://meo.comick.pictures/';
+var MY_PROXY='https://tfreader-proxy.onrender.com/proxy?url=';
+
+async function ckFetch(url){
+  var r=await F(MY_PROXY+encodeURIComponent(url),16000);
+  if(!r.ok)throw new Error('proxy HTTP '+r.status);
+  return r.json();
+}
+
+function ckMapItem(c){
+  var img=c.md_covers&&c.md_covers.length?CKI+c.md_covers[0].b2key:null;
+  return{id:'ck_'+(c.hid||c.slug),src:'ck',tab:'comic',
+    title:c.title||'?',desc:c.desc||c.summary||'',poster:img,
+    year:null,status:'',tags:['Comic'],slug:c.slug,hid:c.hid};
+}
+
+async function ckSearch(q){
+  try{
+    var d=await ckFetch(CK+'/v1.0/search?q='+encodeURIComponent(q)+'&limit=20&page=1');
+    if(!Array.isArray(d))return[];
+    return d.filter(function(c){return c&&(c.slug||c.hid);}).map(ckMapItem);
+  }catch(e){console.log('ckSearch err:',e.message);return[];}
+}
+
+async function ckChaptersBySlug(slug,hid){
+  var id=hid||slug;if(!id)return[];
+  var langs=['es','en'];
+  for(var li=0;li<langs.length;li++){
+    try{
+      var d=await ckFetch(CK+'/comic/'+encodeURIComponent(id)+'/chapters?page=1&limit=500&lang='+langs[li]+'&chap-order=1');
+      if(d&&d.chapters&&d.chapters.length){
+        return d.chapters.map(function(c){
+          return{id:'ck_'+c.hid,src:'ck',hid:c.hid,num:c.chap||'?',title:c.title||'',lang:c.lang||langs[li]};
+        });
+      }
+    }catch(e){console.log('ckChapters err:',e.message);}
+  }
+  return[];
+}
+
+async function ckPages(hid){
+  var d=await ckFetch(CK+'/chapter/'+hid+'?tachiyomi=true');
+  var imgs=[];
+  if(d&&d.chapter&&d.chapter.images)imgs=d.chapter.images;
+  else if(d&&Array.isArray(d))imgs=d;
+  else if(d&&Array.isArray(d.images))imgs=d.images;
+  if(!imgs.length)throw new Error('ckPages sin imagenes hid='+hid);
+  return imgs.map(function(img){
+    if(typeof img==='string')return img.startsWith('http')?img:CKI+img;
+    if(img.url)return img.url;
+    if(img.b2key)return CKI+img.b2key;
+    return'';
+  }).filter(Boolean);
+}
+
+async function ckFindSlug(title){
+  try{
+    var q=title.replace(/[^\w\s]/g,' ').trim().slice(0,50);
+    var d=await ckFetch(CK+'/v1.0/search?q='+encodeURIComponent(q)+'&limit=5&page=1');
+    if(!Array.isArray(d)||!d.length)return null;
+    var tl=title.toLowerCase().replace(/[^a-z0-9]/g,'');
+    for(var i=0;i<d.length;i++){
+      var rt=(d[i].title||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+      if(rt===tl||rt.indexOf(tl)>=0||tl.indexOf(rt)>=0)return{slug:d[i].slug,hid:d[i].hid};
+    }
+    return{slug:d[0].slug,hid:d[0].hid};
+  }catch(e){return null;}
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   COMICK.FUN via allorigins CORS proxy
+   allorigins.win proxies any URL + adds CORS headers
+   Returns: {contents: "json_string", status: {http_code: 200}}
+   ═══════════════════════════════════════════════════════════ */
+
+/* Aliases — mdFetch and mdQs called by some functions but GET/QS are defined */
+function mdQs(o){return QS(o);}
+async function mdFetch(path,params){return GET(path,params);}
+
+
+/* Cover */
+function cov(m){
+  var rel=(m.relationships||[]).find(function(r){return r.type==='cover_art';});
+  return rel&&rel.attributes?MDI+'/covers/'+m.id+'/'+rel.attributes.fileName+'.512.jpg':null;
+}
+
+/* Map MangaDex manga */
+function mapM(m){
+  var a=m.attributes||{};
+  var ti=a.title||{};
+  /* Always prefer Spanish title */
+  var t=ti.es||ti['es-la']||ti.en||Object.values(ti)[0]||'Sin titulo';
+  var de=a.description||{};
+  /* Always prefer Spanish description */
+  var d=de.es||de['es-la']||de.en||Object.values(de)[0]||'';
+  var or=a.originalLanguage||'ja';
+  var tab=or==='ko'?'manhwa':(or==='en'?'comic':'manga');
+  var TG={Action:'Accion',Romance:'Romance',Fantasy:'Fantasia',Drama:'Drama',
+    Comedy:'Comedia',Horror:'Terror',Isekai:'Isekai',Supernatural:'Sobrenatural',
+    Mystery:'Misterio','Sci-Fi':'Ciencia Ficcion','Slice of Life':'Vida cotidiana',
+    Harem:'Harem',Psychological:'Psicologico',Historical:'Historico',
+    'School Life':'Vida escolar',Adventure:'Aventura','Martial Arts':'Artes marciales',
+    Sports:'Deportes',Tragedy:'Tragedia',Magic:'Magia',Superhero:'Superheroes',
+    Reincarnation:'Reencarnacion',Survival:'Supervivencia','Reverse Harem':'Harem inverso',
+    'Time Travel':'Viaje en el tiempo',Villainess:'Villana','Long Strip':'Tira larga',
+    'Web Comic':'Webcomic','Office Workers':'Oficinistas',Monsters:'Monstruos',
+    'Award Winning':'Premiado',Adaptation:'Adaptacion',Anthology:'Antologia',
+    'Full Color':'Color completo',Doujinshi:'Doujinshi','Fan Colored':'Coloreado por fans',
+    Gore:'Gore','Sexual Violence':'Violencia sexual',Philosophical:'Filosofico',
+    Medical:'Medico',Mecha:'Mecha',Music:'Musica',Cooking:'Cocina',
+    'Magical Girls':'Chicas magicas','Monster Girls':'Chicas monstruo',
+    Gyaru:'Gyaru',Delinquents:'Delincuentes',Samurai:'Samurai',Ninja:'Ninja',
+    Vampires:'Vampiros',Villainess:'Villana','Wuxia':'Wuxia','Xianxia':'Xianxia'};
+  var tags=(a.tags||[]).map(function(tg){
+    var en=tg.attributes&&tg.attributes.name&&tg.attributes.name.en||'';
+    var es=tg.attributes&&tg.attributes.name&&(tg.attributes.name.es||'')||'';
+    return es||TG[en]||en;
+  }).filter(Boolean);
+  return{id:m.id,tab:tab,title:t,desc:d,poster:cov(m),year:a.year||null,status:a.status||'',tags:tags};
+}
+
+/* Tag IDs */
+var T={
+  Superhero:'320831fb-adbc-4f91-9afa-0d8f2a513b5e',
+  Action:'391b0423-d847-456f-aff4-17d196b3b2e0',
+  Romance:'423e2eae-a7a2-4a8b-ac03-a8351462d71d',
+  Fantasy:'cdc58593-87dd-415e-bbc0-2ec27bf404cc',
+  Drama:'b9af3a63-f058-46de-a9a0-e0c13906197a',
+  Comedy:'4d32cc48-9f00-4cca-9b5a-a839f0764984',
+  Isekai:'ace04997-f6bd-436e-b261-779182193d3d',
+  Supernatural:'eabc5b4c-6aff-42f3-b657-3e90cbd00b75',
+  Mystery:'ee968100-4191-4968-93d3-f82d72be7e46',
+  Horror:'cdad7e68-1419-41dd-bdce-27753074a640',
+  SliceOfLife:'e5301a23-ebd9-49dd-a0cb-2add944c7fe9',
+};
+
+var LANGS=['es','es-la','en'];
+
+async function apiPop(orig,nsfw){
+  /* Try Spanish first */
+  var p={limit:20,includes:['cover_art'],contentRating:CR(nsfw||false),'order[followedCount]':'desc',limit:30,availableTranslatedLanguage:['es','es-la']};
+  if(orig)p['originalLanguage[]']=orig;
+  try{
+    var d=await mdFetch('/manga',p);var res=(d.data||[]).map(mapM);
+    if(res.length>=8)return res;
+  }catch(e){}
+  /* Fallback: no language restriction */
+  var p2={limit:20,includes:['cover_art'],contentRating:CR(nsfw||false),'order[followedCount]':'desc'};
+  if(orig)p2['originalLanguage[]']=orig;
+  try{var d2=await mdFetch('/manga',p2);return(d2.data||[]).map(mapM);}catch(e2){return[];}
+}
+async function apiNew(orig){
+  var p={limit:20,includes:['cover_art'],contentRating:CR(false),'order[latestUploadedChapter]':'desc',availableTranslatedLanguage:['es','es-la','en']};
+  if(orig)p['originalLanguage[]']=orig;
+  var d=await mdFetch('/manga',p);return(d.data||[]).map(mapM);
+}
+async function apiTag(tagId,orig){
+  var p={limit:20,includes:['cover_art'],contentRating:CR(false),'order[followedCount]':'desc',availableTranslatedLanguage:['es','es-la','en'],'includedTags[]':tagId};
+  if(orig)p['originalLanguage[]']=orig;
+  var d=await mdFetch('/manga',p);return(d.data||[]).map(mapM);
+}
+async function apiSearch(q){
+  /* Search without lang filter to find everything, then prefer ES results */
+  var p={limit:24,includes:['cover_art'],contentRating:CR(C.nsfw),title:q,availableTranslatedLanguage:['es','es-la','en']};
+  var d=await mdFetch('/manga',p);return(d.data||[]).map(mapM);
+}
+async function apiWesternComics(q){
+  /* Search MangaDex for western comics (originalLanguage=en) */
+  var p={limit:16,includes:['cover_art'],contentRating:CR(false),'originalLanguage[]':'en',title:q};
+  var d=await mdFetch('/manga',p);return(d.data||[]).map(mapM);
+}
+async function apiEnComics(){
+  /* Popular English-origin comics with any translation */
+  var p={limit:20,includes:['cover_art'],contentRating:CR(false),'order[followedCount]':'desc','originalLanguage[]':'en'};
+  var d=await mdFetch('/manga',p);return(d.data||[]).map(mapM);
+}
+
+/* CHAPTERS — solo los que se pueden leer en la app (sin externalUrl) */
+async function apiChapters(mangaId){
+  /* Step 1: Try MangaDex paginated */
+  var mdResult=[];
+  try{
+    var all=[];var offset=0;var hasMore=true;
+    while(hasMore){
+      var p={limit:500,offset:offset,'order[chapter]':'asc',contentRating:CR(true)};
+      var d=await mdFetch('/manga/'+mangaId+'/feed',p);
+      var batch=d.data||[];all=all.concat(batch);offset+=batch.length;
+      hasMore=batch.length===500&&all.length<(d.total||99999);
+    }
+    var readable=all.filter(function(c){return!c.attributes.externalUrl;});
+    var byNum={};
+    readable.forEach(function(c){
+      var a=c.attributes||{};var n=a.chapter;if(n===null||n===undefined)return;
+      var l=a.translatedLanguage||'';
+      var pr=l==='es'?0:l==='es-la'?1:l==='en'?2:3;
+      if(!byNum[n]||pr<byNum[n].pr)byNum[n]={c:c,pr:pr};
+    });
+    mdResult=Object.values(byNum).sort(function(a,b){
+      return parseFloat(a.c.attributes.chapter||0)-parseFloat(b.c.attributes.chapter||0);
+    }).map(function(x){return x.c;});
+  }catch(e){}
+
+  /* Step 2: Try Comick via proxy — usually more complete in Spanish */
+  var ckResult=[];
+  if(typeof ckFindSlug==='function'){
+    try{
+      var info=S.detCache[mangaId];
+      var searchTitle=info&&info.title?info.title:'';
+      if(searchTitle){
+        var found=await ckFindSlug(searchTitle);
+        if(found){ckResult=await ckChaptersBySlug(found.slug,found.hid);}
+      }
+    }catch(e){}
+  }
+
+  /* Use whichever has more chapters */
+  if(ckResult.length>mdResult.length&&ckResult.length>0)return ckResult;
+  if(mdResult.length>0)return mdResult;
+  return ckResult;
+}
+
+/* PÁGINAS — 2 intentos */
+async function apiPages(chId){
+  async function tryURL(url){
+    var r=await F(url,15000);
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    var d=await r.json();
+    if(!d||!d.baseUrl)throw new Error('Sin servidor');
+    var ch=d.chapter;if(!ch||!ch.hash)throw new Error('Sin hash');
+    var pgs,pfx;
+    if(ch.dataSaver&&ch.dataSaver.length){pgs=ch.dataSaver;pfx='/data-saver/';}
+    else if(ch.data&&ch.data.length){pgs=ch.data;pfx='/data/';}
+    else throw new Error('Sin páginas');
+    return pgs.map(function(p){return d.baseUrl+pfx+ch.hash+'/'+p;});
+  }
+  try{return await tryURL(MD+'/at-home/server/'+chId);}catch(e1){}
+  return tryURL(MD+'/at-home/server/'+chId+'?forcePort443=true');
+}
+
+/* ═══════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════ */
+var S={cat:'todo',myList:[],recent:[],detCache:{},chCache:{}};
+function lsG(k,d){try{return JSON.parse(localStorage.getItem(k)||d);}catch(e){return JSON.parse(d);}}
+function lsW(){localStorage.setItem('tfr_ml',JSON.stringify(S.myList.slice(0,200)));localStorage.setItem('tfr_r',JSON.stringify(S.recent.slice(0,40)));}
+function loadS(){S.myList=lsG('tfr_ml','[]');S.recent=lsG('tfr_r','[]');}
+var PR={};
+function loadP(){try{PR=JSON.parse(localStorage.getItem('tfr_p')||'{}');}catch(e){PR={};}}
+function saveP(){try{localStorage.setItem('tfr_p',JSON.stringify(PR));}catch(e){}}
+function markR(id,chId,num){if(!PR[id])PR[id]={};PR[id][chId]=true;PR[id]._l=num;saveP();}
+function isR(id,chId){return!!(PR[id]&&PR[id][chId]);}
+function lastC(id){return PR[id]&&PR[id]._l||null;}
+
+function inL(id){return S.myList.some(function(x){return x.id===id;});}
+function togL(item){
+  if(inL(item.id)){S.myList=S.myList.filter(function(x){return x.id!==item.id;});toast('Eliminado de Mi Lista');}
+  else{S.myList.unshift({id:item.id,title:item.title,poster:item.poster,tab:item.tab});toast('✓ Añadido a Mi Lista');}
+  lsW();updCnt();syncL(item.id);
+}
+function updCnt(){
+  var n=S.myList.length;var c=gi('mlCnt');
+  if(c){c.style.display=n?'grid':'none';c.textContent=n>9?'9+':String(n);}
+  var t=gi('mlTot');if(t)t.textContent=n?'('+n+')':'';
+}
+function syncL(id){
+  var on=inL(id);
+  document.querySelectorAll('[data-lid="'+id+'"]').forEach(function(el){
+    el.classList.toggle('on',on);
+    var p=el.querySelector('path');
+    if(p)p.setAttribute('fill',on?'currentColor':'none');
+  });
+}
+function addRec(item,chId,num){
+  S.recent=S.recent.filter(function(x){return x.id!==item.id;});
+  S.recent.unshift({id:item.id,title:item.title,poster:item.poster,tab:item.tab,lastChId:chId,lastChNum:num});
+  if(S.recent.length>40)S.recent=S.recent.slice(0,40);lsW();
+}
+
+function gi(i){return document.getElementById(i);}
+function esc(s){return String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&','<':'<','>':'>','"':'"',"'":'''}[c];});}
+var _tst=gi('tst');
+function toast(msg,ms){var el=document.createElement('div');el.className='toast';el.textContent=msg;_tst.appendChild(el);requestAnimationFrame(function(){requestAnimationFrame(function(){el.classList.add('s');});});setTimeout(function(){el.classList.remove('s');setTimeout(function(){el.remove();},180);},ms||1800);}
+function tL(t){return t==='manga'?'Manga':(t==='manhwa'?'Manhwa':'Cómic');}
+function tC(t){return t==='manga'?'tb-m':(t==='manhwa'?'tb-mh':'tb-c');}
+
+/* ═══════════════════════════════════════════════
+   HERO
+   ═══════════════════════════════════════════════ */
+var _hi=[],_hI=0,_hT=null;
+async function buildHero(){
+  try{
+    var items=await apiPop(null,false);
+    _hi=items.filter(function(x){return x.poster;}).slice(0,5);
+    var sl=gi('heroSl'),dc=gi('hDots');sl.innerHTML='';dc.innerHTML='';
+    _hi.forEach(function(it,i){
+      var s=document.createElement('div');s.className='hs';
+      s.innerHTML='<img src="'+esc(it.poster)+'" alt="" loading="'+(i===0?'eager':'lazy')+'" onerror="this.src=\'\'"/><div class="hsg"></div><div class="hsb"><div class="hst">'+esc(it.title)+'</div><button class="hsbtn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg> Leer ahora</button></div>';
+      s.querySelector('.hsbtn').onclick=function(){openDet(it);};
+      sl.appendChild(s);
+      var d=document.createElement('div');d.className='hd'+(i===0?' on':'');dc.appendChild(d);
+    });
+    if(_hi.length>1)_hT=setInterval(function(){setH((_hI+1)%_hi.length);},6000);
+  }catch(e){
+    gi('heroW').innerHTML='<div style="height:52px"></div><div style="padding:30px 14px;color:var(--mu);font-size:12px;text-align:center">Cargando contenido…</div>';
+  }
+}
+function setH(i){_hI=i;gi('heroSl').style.transform='translateX(-'+i*100+'%)';document.querySelectorAll('.hd').forEach(function(d,j){d.classList.toggle('on',j===i);});}
+(function(){var sx=0,sy=0,hw=gi('heroW');
+  hw.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  hw.addEventListener('touchend',function(e){var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>38){clearInterval(_hT);setH(((_hI+(dx<0?1:-1))+_hi.length)%Math.max(1,_hi.length));}},{passive:true});
+})();
+
+/* ═══════════════════════════════════════════════
+   ROWS
+   ═══════════════════════════════════════════════ */
+var _RC={};
+function getRows(cat){
+  var o=cat==='manga'?'ja':(cat==='manhwa'?'ko':(cat==='comic'?'en':null));
+  var base=[
+    {id:'cw',  title:'Continuar leyendo',    type:'cw'},
+    {id:'t10', title:'Top 10 esta semana',   type:'t10',fn:function(){return apiPop(o,false).then(function(d){return d.slice(0,10);});}},
+    {id:'pop', title:cat==='todo'?'Mas populares':(tL(cat)+'s populares'),type:'std',fn:function(){return apiPop(o,C.nsfw);}},
+    {id:'new', title:'Ultimas actualizaciones',type:'std',fn:function(){return apiNew(o);}},
+    {id:'act', title:'Accion',   type:'std',fn:function(){return apiTag(T.Action,o);}},
+    {id:'rom', title:'Romance',  type:'std',fn:function(){return apiTag(T.Romance,o);}},
+    {id:'fan', title:'Fantasia', type:'std',fn:function(){return apiTag(T.Fantasy,o);}},
+    {id:'ise', title:'Isekai',   type:'std',fn:function(){return apiTag(T.Isekai,o);}},
+    {id:'dra', title:'Drama',    type:'std',fn:function(){return apiTag(T.Drama,o);}},
+    {id:'com', title:'Comedia',  type:'std',fn:function(){return apiTag(T.Comedy,o);}},
+    {id:'sol', title:'Slice of Life',type:'std',fn:function(){return apiTag(T.SliceOfLife,o);}},
+    {id:'sup', title:'Sobrenatural',type:'std',fn:function(){return apiTag(T.Supernatural,o);}},
+    {id:'hor', title:'Terror',   type:'std',fn:function(){return apiTag(T.Horror,o);}},
+    {id:'ml',  title:'Mi Lista', type:'ml'},
+  ];
+  if(cat==='comic'){
+    base.splice(2,0,
+      {id:'ck_sp',  title:'Spider-Man',           type:'std',fn:function(){return ckSearch('spider-man');}},
+      {id:'ck_bat', title:'Batman (DC)',           type:'std',fn:function(){return ckSearch('batman');}},
+      {id:'ck_inv', title:'Invencible',            type:'std',fn:function(){return ckSearch('invincible');}},
+      {id:'ck_boy', title:'The Boys',              type:'std',fn:function(){return ckSearch('the boys');}},
+      {id:'ck_xm',  title:'X-Men / Avengers',     type:'std',fn:function(){return ckSearch('x-men');}},
+      {id:'ck_sup', title:'Superman / DC Comics',  type:'std',fn:function(){return ckSearch('superman');}},
+      {id:'ck_mv',  title:'Marvel Comics',         type:'std',fn:function(){return ckSearch('marvel');}},
+      {id:'ck_vn',  title:'Venom / Carnage',       type:'std',fn:function(){return ckSearch('venom');}},
+      {id:'md_sh',  title:'Superheroes MangaDex',  type:'std',fn:function(){return apiTag(T.Superhero,'en');}}
+    );
+  }
+  if(cat==='todo'){
+    base.splice(4,0,
+      {id:'ck_f',title:'Comics occidentales',    type:'std',fn:function(){return ckSearch('marvel');}},
+      {id:'mh_f',title:'Manhwa destacado',       type:'std',fn:function(){return apiPop('ko',false);}},
+      {id:'mg_f',title:'Manga destacado',        type:'std',fn:function(){return apiPop('ja',false);}}
+    );
+  }
+  return base;
+}
+async function buildRows(){
+  var c=gi('rows');c.innerHTML='';
+  var rows=getRows(S.cat);
+  rows.forEach(function(r){if(r.type==='ml'&&!S.myList.length)return;rowShell(c,r);});
+  c.querySelectorAll('[data-row]').forEach(function(el){
+    var rid=el.dataset.row;
+    var def=getRows(S.cat).find(function(d){return d.id===rid;});
+    if(def)loadRow(el,def);
+  });
+}
+function rowShell(c,def){
+  var div=document.createElement('div');div.className='row';div.dataset.row=def.id;
+  div.innerHTML='<div class="rowH"><div class="rowT">'+esc(def.title)+'</div>'+(def.type==='ml'?'<div class="rowT" style="font-size:10.5px;color:var(--mu);cursor:pointer" id="mlAll">Ver todo</div>':'')+'</div><div class="rowS"></div>';
+  c.appendChild(div);
+  if(def.type==='ml'){var a=div.querySelector('#mlAll');if(a)a.onclick=function(){renderML();gi('mlBd').classList.add('open');};}
+}
+async function loadRow(rowEl,def){
+  var sc=rowEl.querySelector('.rowS');if(!sc)return;
+  sc.innerHTML='';
+  for(var i=0;i<7;i++){var s=document.createElement('div');s.className='sk '+(def.type==='cw'?'sk-cw':'sk-p');sc.appendChild(s);}
+  var isCkRow=def.id&&def.id.indexOf('ck_')===0;
+  try{
+    var items;
+    if(def.type==='cw')items=S.recent.slice(0,12);
+    else if(def.type==='ml')items=S.myList.slice(0,20);
+    else if(_RC[def.id])items=_RC[def.id];
+    else{items=await def.fn();_RC[def.id]=items;}
+    sc.innerHTML='';
+    if(!items||!items.length){
+      if(isCkRow){
+        /* Show loading message for Comick rows, retry after 3s */
+        sc.innerHTML='<div style="padding:6px 0;font-size:10px;color:var(--mu);font-style:italic">Cargando desde Comick...</div>';
+        setTimeout(async function(){
+          if(_RC[def.id]&&_RC[def.id].length)return;
+          try{var r2=await def.fn();if(r2&&r2.length){_RC[def.id]=r2;sc.innerHTML='';renderStd(sc,r2);}}catch(e){}
+        },3000);
+      } else {
+        rowEl.style.display='none';
+      }
+      return;
+    }
+    if(def.type==='cw')renderCW(sc,items,rowEl);
+    else if(def.type==='t10')renderT10(sc,items);
+    else renderStd(sc,items);
+  }catch(e){
+    sc.innerHTML='';
+    if(isCkRow){
+      sc.innerHTML='<div style="padding:6px 0;font-size:10px;color:var(--rd)">Comick no disponible: '+esc(e.message)+'</div>';
+    } else {
+      rowEl.style.display='none';
+    }
+  }
+}
+var NOIMG='<div class="ph"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(168,85,247,.3)" stroke-width="1.4" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg></div>';
+function renderStd(sc,items){
+  items.forEach(function(it){
+    var el=document.createElement('div');el.className='pc';
+    var art=document.createElement('div');art.className='pca';
+    if(it.poster){var img=document.createElement('img');img.alt='';img.loading='lazy';img.src=it.poster;img.onerror=function(){this.parentNode.innerHTML=NOIMG;};art.appendChild(img);}
+    else art.innerHTML=NOIMG;
+    var b=document.createElement('span');b.className='tb '+tC(it.tab);b.textContent=tL(it.tab);art.appendChild(b);
+    el.appendChild(art);
+    var ti=document.createElement('div');ti.innerHTML='<div class="pct">'+esc(it.title)+'</div>';
+    el.appendChild(ti);el.onclick=function(){openDet(it);};sc.appendChild(el);
+  });
+}
+function renderCW(sc,items,rowEl){
+  items.forEach(function(r){
+    var el=document.createElement('div');el.className='cwc';
+    el.innerHTML=(r.poster?'<img src="'+esc(r.poster)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">':'')
+      +'<div class="cwdel"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M18 6 6 18M6 6l12 12"></path></svg></div>'
+      +'<div class="cwci"><div class="cwct">'+esc(r.title)+'</div><div class="cwcc">'+(r.lastChNum?'Cap. '+r.lastChNum:'')+'</div></div>';
+    el.querySelector('.cwdel').onclick=function(e){
+      e.stopPropagation();S.recent=S.recent.filter(function(x){return x.id!==r.id;});lsW();
+      el.remove();if(!sc.children.length&&rowEl)rowEl.style.display='none';
+    };
+    el.onclick=function(){if(r.lastChId)openRdrById(r,r.lastChId,r.lastChNum);else openDet(r);};
+    sc.appendChild(el);
+  });
+}
+function renderT10(sc,items){
+  items.slice(0,10).forEach(function(it,i){
+    var el=document.createElement('div');el.className='t10c';
+    el.innerHTML=(it.poster?'<img src="'+esc(it.poster)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">':'')+'<div class="t10n">'+(i+1)+'</div>';
+    el.onclick=function(){openDet(it);};sc.appendChild(el);
+  });
+}
+document.querySelectorAll('.cp').forEach(function(el){
+  el.onclick=function(){S.cat=el.dataset.cat;document.querySelectorAll('.cp').forEach(function(x){x.classList.toggle('on',x===el);});_RC={};buildRows();};
+});
+
+/* ═══════════════════════════════════════════════
+   SEARCH
+   ═══════════════════════════════════════════════ */
+var _st=null;
+gi('hSIn').addEventListener('input',function(){
+  var q=this.value.trim();gi('hSCl').style.display=q?'block':'none';
+  if(q.length>=2){gi('srchV').style.display='block';gi('main').style.display='none';gi('heroW').style.display='none';gi('catBar').style.display='none';clearTimeout(_st);_st=setTimeout(function(){doSearch(q);},500);}
+  else if(!q)clrSearch();
+});
+gi('hSCl').onclick=function(){gi('hSIn').value='';clrSearch();};
+function clrSearch(){gi('srchV').style.display='none';gi('main').style.display='';gi('heroW').style.display='';gi('catBar').style.display='';gi('hSCl').style.display='none';}
+async function doSearch(q){
+  var gr=gi('srchG'),inf=gi('srchI');gr.innerHTML='';inf.innerHTML='<div class="sinf">Buscando…</div>';
+  try{
+    var items=await apiSearch(q);inf.innerHTML='';
+    if(!items.length){inf.innerHTML='<div class="sinf">Sin resultados para "'+esc(q)+'"</div>';return;}
+    items.forEach(function(it){
+      var el=document.createElement('div');el.className='sgc';
+      el.innerHTML='<span class="tb '+tC(it.tab)+'">'+tL(it.tab)+'</span>'
+        +(it.poster?'<img src="'+esc(it.poster)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">':NOIMG)
+        +'<div class="sgct">'+esc(it.title)+'</div>';
+      el.onclick=function(){openDet(it);};gr.appendChild(el);
+    });
+  }catch(e){gi('srchI').innerHTML='<div class="sinf">Error: '+esc(e.message)+'</div>';}
+}
+
+/* ═══════════════════════════════════════════════
+   DETAIL
+   ═══════════════════════════════════════════════ */
+async function openDet(item){
+  gi('dImg').src=item.poster||'';gi('dBy').innerHTML='<div class="sp"></div>';
+  gi('detBd').classList.add('open');document.body.style.overflow='hidden';
+  history.pushState({tfr:'det'},'');
+  try{
+    var full=S.detCache[item.id];
+    if(!full){var r=await GET('/manga/'+item.id,{includes:['cover_art','author']});full=mapM(r.data||{id:item.id,relationships:[],attributes:{}});full.poster=full.poster||item.poster;S.detCache[item.id]=full;}
+    if(!gi('detBd').classList.contains('open'))return;
+    if(full.poster)gi('dImg').src=full.poster;
+    renderDet(full);
+  }catch(e){gi('dBy').innerHTML='<div style="padding:14px;color:var(--mu);font-size:12px">Error: '+esc(e.message)+'</div>';}
+}
+function renderDet(f){
+  var on=inL(f.id),lch=lastC(f.id);
+  gi('dBy').innerHTML=
+    '<div class="dttl">'+esc(f.title)+'</div>'
+    +'<div class="dmt"><span class="dbg '+tC(f.tab)+'">'+tL(f.tab)+'</span>'+(f.year?'<span class="dbg">'+f.year+'</span>':'')+(f.status?'<span class="dbg gr">'+esc(f.status)+'</span>':'')+'</div>'
+    +'<div class="dbtns">'
+    +'<button class="drd" id="dRd"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>'+(lch?'Continuar Cap. '+lch:'Leer Cap. 1')+'</button>'
+    +'<button class="dls'+(on?' on':'')+'" id="dLs" data-lid="'+f.id+'"><svg width="16" height="16" viewBox="0 0 24 24" fill="'+(on?'currentColor':'none')+'" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg></button>'
+    +'</div>'
+    +(f.desc&&f.desc.length>5?'<div class="ddsc" id="dDsc">'+esc(f.desc.slice(0,280))+(f.desc.length>280?'…':'')+'</div>'+(f.desc.length>280?'<div class="dmore" id="dMr">Ver más ▾</div>':''):'')
+    +(f.tags&&f.tags.length?'<div class="dgs">'+f.tags.slice(0,8).map(function(g){return'<span class="dg">'+esc(g)+'</span>';}).join('')+'</div>':'')
+    +'<div class="dsec">Capítulos en la app</div>'
+    +'<div class="chlist" id="chList"><div class="sp"></div></div>';
+
+  var dd=gi('dDsc'),dm=gi('dMr');
+  if(dm)dm.onclick=function(){dd.classList.toggle('exp');dm.textContent=dd.classList.contains('exp')?'Ver menos ▲':'Ver más ▾';};
+  gi('dLs').onclick=function(){togL(f);};
+  gi('dRd').onclick=function(){readFirst(f);};
+  loadChList(f);
+}
+async function readFirst(f){
+  var chs=S.chCache[f.id];
+  if(!chs){
+    var btn=gi('dRd');if(btn){btn.innerHTML='<div class="sp" style="margin:0;width:14px;height:14px;border-width:1.5px"></div>';btn.disabled=true;}
+    try{chs=await apiChapters(f.id);S.chCache[f.id]=chs;}
+    catch(e){toast('Error: '+e.message);return;}
+    finally{if(gi('dRd')){gi('dRd').disabled=false;var lch=lastC(f.id);gi('dRd').innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>'+(lch?'Continuar Cap. '+lch:'Leer Cap. 1');}}
+  }
+  if(!chs||!chs.length){toast('Sin capitulos disponibles');return;}
+  var lch=lastC(f.id);
+  var nonExt=chs.filter(function(c){
+    if(c.src==='ck')return true;
+    return!c.attributes.externalUrl;
+  });
+  var pool=nonExt.length?nonExt:chs;
+  var target=pool[0];
+  if(lch){var found=pool.find(function(c){var n=c.src==='ck'?c.num:(c.attributes&&c.attributes.chapter||'?');return Math.abs(parseFloat(String(n))-parseFloat(String(lch)))<0.01;});if(found)target=found;}
+  if(!target.src&&target.attributes&&target.attributes.externalUrl){
+    window.open(target.attributes.externalUrl,'_blank','noopener');
+    addRec(f,target.id,String(target.attributes.chapter||'?'));
+    markR(f.id,target.id,target.attributes.chapter||'?');
+  } else {openRdr(f,target,chs);}
+}
+async function loadChList(item){
+  var list=gi('chList');if(!list)return;
+  var chs=S.chCache[item.id];
+  if(!chs){
+    try{chs=await apiChapters(item.id);S.chCache[item.id]=chs;}
+    catch(e){if(gi('chList'))gi('chList').innerHTML='<div class="nodata">Error: '+esc(e.message)+'</div>';return;}
+  }
+  if(!gi('chList')||!gi('detBd').classList.contains('open'))return;
+  if(!chs||!chs.length){gi('chList').innerHTML='<div class="nodata">Sin capitulos disponibles todavia.</div>';return;}
+  var FLAGS={es:'\uD83C\uDDEA\uD83C\uDDF8','es-la':'\uD83C\uDDEA\uD83C\uDDF8',en:'\uD83C\uDDFA\uD83C\uDDF8','pt-br':'\uD83C\uDDE7\uD83C\uDDF7',fr:'\uD83C\uDDEB\uD83C\uDDF7'};
+  var lch=lastC(item.id);gi('chList').innerHTML='';
+  var frag=document.createDocumentFragment();
+  chs.forEach(function(c){
+    var isCK=c.src==='ck';
+    var num=isCK?c.num:(c.attributes&&c.attributes.chapter||'?');
+    var title=isCK?c.title:(c.attributes&&c.attributes.title||'');
+    var lang=isCK?c.lang:(c.attributes&&c.attributes.translatedLanguage||'');
+    var extUrl=!isCK&&c.attributes&&c.attributes.externalUrl;
+    var isCur=lch&&Math.abs(parseFloat(String(num))-parseFloat(String(lch)))<0.01;
+    var read=isR(item.id,c.id);
+    var flag=FLAGS[lang]||(lang?lang.toUpperCase().slice(0,2):'??');
+    var row=document.createElement('div');
+    row.className='chr'+(isCur?' cur':'');
+    if(extUrl)row.style.opacity='.7';
+    row.innerHTML='<span class="chn">Cap. '+esc(String(num))+'</span>'
+      +'<span class="chnm">'+(title?esc(title):'Cap. '+esc(String(num)))+'</span>'
+      +(extUrl?'<span class="chd">\uD83D\uDD17</span>':'')
+      +'<span class="chd">'+flag+'</span>'
+      +(isCur?'<span class="chd" style="color:var(--ac)">\u25B6</span>':'')
+      +(read?'<span class="chk"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg></span>':'');
+    if(extUrl){
+      row.onclick=function(){addRec(item,c.id,String(num));markR(item.id,c.id,num);window.open(extUrl,'_blank','noopener');};
+    } else {
+      row.onclick=function(){openRdr(item,c,chs);};
+    }
+    frag.appendChild(row);
+  });
+  gi('chList').appendChild(frag);
+}
+gi('dBk').onclick=function(){history.back();};
+
+/* ═══════════════════════════════════════════════
+   READER
+   ═══════════════════════════════════════════════ */
+var _rItem=null,_rChs=[],_rIdx=0,_rPgs=[],_rPg=0,_rTmr=null;
+
+function showCtrl(){
+  if(!gi('rdr').classList.contains('open'))return; /* Only while reading */
+  gi('rCtrl').classList.remove('h');
+  clearTimeout(_rTmr);
+  _rTmr=setTimeout(function(){gi('rCtrl').classList.add('h');},2500);
+}
+gi('rScr').addEventListener('click',showCtrl,{passive:true});
+/* Pinch-to-zoom for cascade mode */
+(function(){
+  var sc=gi('rScr');var scale=1;var startDist=0;
+  sc.addEventListener('touchstart',function(e){
+    if(e.touches.length===2){
+      startDist=Math.hypot(e.touches[1].clientX-e.touches[0].clientX,e.touches[1].clientY-e.touches[0].clientY);
+    }
+  },{passive:true});
+  sc.addEventListener('touchmove',function(e){
+    if(e.touches.length===2&&startDist>0){
+      var dist=Math.hypot(e.touches[1].clientX-e.touches[0].clientX,e.touches[1].clientY-e.touches[0].clientY);
+      scale=Math.min(4,Math.max(1,(scale*(dist/startDist))));
+      startDist=dist;
+      sc.style.transformOrigin='center top';
+      sc.style.transform='scale('+scale+')';
+    }
+  },{passive:true});
+  sc.addEventListener('touchend',function(e){
+    if(e.touches.length<2){startDist=0;}
+    if(scale<1.05){sc.style.transform='';scale=1;}
+  },{passive:true});
+})();
+gi('rPg').addEventListener('click',showCtrl,{passive:true});
+
+async function openRdr(item,chapter,chapters){
+  _rItem=item;_rChs=chapters||[];
+  _rIdx=_rChs.findIndex(function(c){return c.id===chapter.id;});if(_rIdx<0)_rIdx=0;
+  var num=(chapter.attributes&&chapter.attributes.chapter)||'?';
+  gi('rTitl').textContent=esc(item.title)+' · Cap. '+num;
+  gi('rdr').classList.add('open');document.body.style.overflow='hidden';
+  gi('rCtrl').style.display='block';
+  history.pushState({tfr:'rdr'},'');
+  addRec(item,chapter.id,num);markR(item.id,chapter.id,num);
+  populateChSel();updNavBtns();
+  await loadPgs(chapter,num);
+}
+async function openRdrById(item,chId,num){
+  var chs=S.chCache[item.id];
+  if(!chs){try{chs=await apiChapters(item.id);S.chCache[item.id]=chs;}catch(e){openDet(item);return;}}
+  var ch=chs.find(function(c){return c.id===chId;});
+  if(!ch&&chs.length)ch=chs[0];
+  if(ch)openRdr(item,ch,chs);else openDet(item);
+}
+
+function populateChSel(){
+  var sel=gi('rCpSel');sel.innerHTML='';
+  _rChs.forEach(function(c,i){
+    var opt=document.createElement('option');
+    opt.value=i;opt.textContent='Cap. '+(c.attributes&&c.attributes.chapter||'?');
+    if(i===_rIdx)opt.selected=true;
+    sel.appendChild(opt);
+  });
+}
+gi('rCpSel').onchange=function(){
+  var i=parseInt(this.value);if(isNaN(i)||i===_rIdx)return;
+  _rIdx=i;var c=_rChs[i];var num=(c.attributes&&c.attributes.chapter)||'?';
+  gi('rTitl').textContent=esc(_rItem.title)+' · Cap. '+num;
+  addRec(_rItem,c.id,num);markR(_rItem.id,c.id,num);
+  gi('rScr').innerHTML='';loadPgs(c,num);
+};
+
+async function loadPgs(chapter,num){
+  var extUrl=chapter&&chapter.attributes&&chapter.attributes.externalUrl;
+  var chId=chapter&&(chapter.id||'');
+  var isCK=chapter&&chapter.src==='ck';
+  gi('rLoadO').classList.remove('gone');
+  gi('rLMsg').textContent='Cargando capitulo...';
+  gi('rRtry').style.display='none';gi('rExtO').style.display='none';
+  showCtrl();
+  if(extUrl&&!isCK){
+    gi('rLMsg').textContent='Capitulo en plataforma externa.';
+    gi('rExtO').style.display='block';gi('rExtO').textContent='Abrir';
+    gi('rExtO').onclick=function(){window.open(extUrl,'_blank','noopener');};
+    return;
+  }
+  var urls=null,err='';
+  if(isCK&&chapter.hid){
+    try{urls=await ckPages(chapter.hid);}
+    catch(e){err='Comick: '+e.message;}
+  } else if(chId){
+    async function mdPg(u){
+      var r=await F(u,15000);if(!r.ok)throw new Error('HTTP '+r.status);
+      var d=await r.json();
+      if(!d||!d.baseUrl)throw new Error('sin baseUrl');
+      var ch=d.chapter;if(!ch||!ch.hash)throw new Error('cap externo o sin hash');
+      var pgs,pfx;
+      if(ch.dataSaver&&ch.dataSaver.length){pgs=ch.dataSaver;pfx='/data-saver/';}
+      else if(ch.data&&ch.data.length){pgs=ch.data;pfx='/data/';}
+      else throw new Error('sin paginas');
+      return pgs.map(function(p){return d.baseUrl+pfx+ch.hash+'/'+p;});
+    }
+    try{urls=await mdPg(MD+'/at-home/server/'+chId);}catch(e1){
+      try{urls=await mdPg(MD+'/at-home/server/'+chId+'?forcePort443=true');}catch(e2){err=e2.message;}
+    }
+  }
+  if(urls&&urls.length){
+    gi('rLoadO').classList.add('gone');
+    _rPgs=urls;_rPg=0;applyMode();updNavBtns();showCtrl();
+  } else {
+    gi('rLMsg').textContent=err||'No se pudo cargar';
+    gi('rRtry').style.display='block';gi('rRtry').onclick=function(){loadPgs(chapter,num);};
+    if(chId&&!isCK){
+      gi('rExtO').style.display='block';gi('rExtO').textContent='Ver en MangaDex';
+      gi('rExtO').onclick=function(){window.open('https://mangadex.org/chapter/'+chId,'_blank','noopener');};
+    }
+  }
+}
+
+function applyMode(){
+  var sb=gi('rScr'),pb=gi('rPg');
+  gi('rModeB').classList.toggle('on',C.pg);gi('modeT').classList.toggle('on',C.pg);
+  if(C.pg){sb.style.display='none';pb.style.display='block';setPgImg();}
+  else{
+    pb.style.display='none';sb.style.display='block';sb.innerHTML='';
+    var fr=document.createDocumentFragment();
+    _rPgs.forEach(function(url,i){
+      var img=document.createElement('img');img.src=url;img.alt='';
+      img.loading=i<3?'eager':'lazy';
+      img.style.cssText='width:100%;display:block;max-width:800px;margin:0 auto';
+      img.onerror=function(){this.style.opacity='.15';this.style.minHeight='80px';};
+      fr.appendChild(img);
+    });
+    sb.appendChild(fr);sb.scrollTop=0;
+  }
+}
+function setPgImg(){
+  if(!_rPgs.length)return;
+  _rPg=Math.max(0,Math.min(_rPg,_rPgs.length-1));
+  gi('rPgImg').src=_rPgs[_rPg];
+  gi('rPgN').textContent=(_rPg+1)+'/'+_rPgs.length;
+}
+gi('rPgPrev').onclick=function(){if(_rPg>0){_rPg--;setPgImg();}showCtrl();};
+gi('rPgNext').onclick=function(){if(_rPg<_rPgs.length-1){_rPg++;setPgImg();}showCtrl();};
+
+gi('rModeB').onclick=function(){C.pg=!C.pg;saveC();if(_rPgs.length)applyMode();toast(C.pg?'Modo: página':'Modo: cascada');};
+gi('rFsB').onclick=function(){try{var el=gi('rdr');(el.requestFullscreen||el.webkitRequestFullscreen||function(){}).call(el);}catch(e){}};
+
+function updNavBtns(){gi('rPrvCh').disabled=_rIdx<=0;gi('rNxtCh').disabled=_rIdx>=_rChs.length-1;}
+gi('rPrvCh').onclick=async function(){
+  if(_rIdx<=0)return;_rIdx--;
+  var c=_rChs[_rIdx];var num=(c.attributes&&c.attributes.chapter)||'?';
+  gi('rTitl').textContent=esc(_rItem.title)+' · Cap. '+num;
+  gi('rScr').innerHTML='';addRec(_rItem,c.id,num);markR(_rItem.id,c.id,num);
+  gi('rCpSel').value=String(_rIdx);
+  await loadPgs(c,num);
+};
+gi('rNxtCh').onclick=async function(){
+  if(_rIdx>=_rChs.length-1)return;_rIdx++;
+  var c=_rChs[_rIdx];var num=(c.attributes&&c.attributes.chapter)||'?';
+  gi('rTitl').textContent=esc(_rItem.title)+' · Cap. '+num;
+  gi('rScr').innerHTML='';addRec(_rItem,c.id,num);markR(_rItem.id,c.id,num);
+  gi('rCpSel').value=String(_rIdx);
+  await loadPgs(c,num);
+};
+gi('rBk').onclick=function(){history.back();};
+
+/* BACK */
+window.addEventListener('popstate',function(){
+  if(gi('rdr').classList.contains('open')){gi('rdr').classList.remove('open');gi('rCtrl').style.display='none';gi('rCtrl').classList.add('h');clearTimeout(_rTmr);if(gi('detBd').classList.contains('open'))document.body.style.overflow='hidden';return;}
+  if(gi('detBd').classList.contains('open')){gi('detBd').classList.remove('open');document.body.style.overflow='';return;}
+  if(gi('mlBd').classList.contains('open')){gi('mlBd').classList.remove('open');return;}
+  if(gi('settBd').classList.contains('open')){gi('settBd').classList.remove('open');return;}
+});
+
+/* MY LIST */
+function renderML(){
+  var n=S.myList.length;gi('mlTot').textContent=n?'('+n+')':'';gi('mlEmp').style.display=n?'none':'block';gi('mlGr').innerHTML='';
+  S.myList.forEach(function(f){
+    var el=document.createElement('div');el.className='mlc';
+    el.innerHTML=(f.poster?'<img src="'+esc(f.poster)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">':'')
+      +'<div class="mlct">'+esc(f.title)+'</div>'
+      +'<div class="mlx"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M18 6 6 18M6 6l12 12"></path></svg></div>';
+    el.querySelector('.mlx').onclick=function(e){e.stopPropagation();S.myList=S.myList.filter(function(x){return x.id!==f.id;});lsW();renderML();syncL(f.id);updCnt();};
+    el.onclick=function(){gi('mlBd').classList.remove('open');openDet(f);};gi('mlGr').appendChild(el);
+  });
+}
+gi('mlBtn').onclick=function(){renderML();gi('mlBd').classList.add('open');};
+gi('mlCls').onclick=function(){gi('mlBd').classList.remove('open');};
+gi('mlBd').addEventListener('click',function(e){if(e.target===gi('mlBd'))gi('mlBd').classList.remove('open');});
+
+/* SETTINGS */
+gi('settBtn').onclick=function(){gi('settBd').classList.add('open');gi('nsfwT').classList.toggle('on',C.nsfw);gi('modeT').classList.toggle('on',C.pg);};
+gi('settCls').onclick=function(){gi('settBd').classList.remove('open');};
+gi('settBd').addEventListener('click',function(e){if(e.target===gi('settBd'))gi('settBd').classList.remove('open');});
+gi('nsfwT').onclick=function(){C.nsfw=!C.nsfw;saveC();gi('nsfwT').classList.toggle('on',C.nsfw);toast(C.nsfw?'+18 en búsquedas':'Contenido +18 ocultado');};
+gi('modeT').onclick=function(){C.pg=!C.pg;saveC();gi('modeT').classList.toggle('on',C.pg);toast(C.pg?'Modo página':'Modo cascada');};
+
+/* LOGO */
+gi('hLogo').onclick=function(){window.location.href='go:principal';};
+
+/* SCROLL HEADER */
+window.addEventListener('scroll',function(){gi('hdr').classList.toggle('s',window.scrollY>10);},{passive:true});
+
+/* INIT */
+loadS();loadP();
+gi('modeT').classList.toggle('on',C.pg);gi('nsfwT').classList.toggle('on',C.nsfw);
+buildHero();buildRows();updCnt();
+(function(){
+  var bar=document.getElementById('catBar');
+  var hero=document.getElementById('heroW');
+  if(!bar||!hero)return;
+  var ph=null;var stuck=false;
+  function check(){
+    var hb=hero.getBoundingClientRect().bottom;
+    if(hb<=52&&!stuck){
+      stuck=true;
+      if(!ph){ph=document.createElement('div');ph.style.height=bar.offsetHeight+'px';}
+      bar.parentNode.insertBefore(ph,bar.nextSibling);
+      bar.style.cssText='position:fixed!important;top:52px!important;left:0!important;right:0!important;z-index:300!important;background:rgba(6,0,15,.96)!important;backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important;border-bottom:1px solid rgba(255,255,255,.09)!important;padding:8px 14px 7px!important;display:flex!important;gap:6px!important;overflow-x:auto!important;scrollbar-width:none!important';
+    } else if(hb>52&&stuck){
+      stuck=false;
+      if(ph&&ph.parentNode)ph.parentNode.removeChild(ph);
+      bar.style.cssText='position:relative;z-index:300;background:rgba(6,0,15,.95);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid rgba(255,255,255,.08);padding:8px 14px 7px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none';
+    }
+  }
+  window.addEventListener('scroll',check,{passive:true});
+})();
+gi('hLogo').onclick=function(){window.location.href='go:principal';};
+
+})();
+</script>
+
+
+
+<script>
+/* TFApp profile */
+window.TF=window.TF||{};var TF=window.TF;
+TF.KEY_USER='tfapp_user';TF.KEY_XP='tfapp_xp';TF.KEY_LVL='tfapp_level';TF.XP_PER_LEVEL=1800;TF.MAX_LEVEL=25;
+TF.RANKS=[{min:1,max:5,icon:'⚔️',label:'Rango I'},{min:6,max:10,icon:'🛡️',label:'Rango II'},{min:11,max:15,icon:'👑',label:'Rango III'},{min:16,max:20,icon:'💎',label:'Rango IV'},{min:21,max:25,icon:'💪',label:'GigaChad'}];
+TF.getRank=function(l){for(var i=0;i<TF.RANKS.length;i++){var r=TF.RANKS[i];if(l>=r.min&&l<=r.max)return r;}return TF.RANKS[TF.RANKS.length-1];};
+TF.getXP=function(){return parseInt(localStorage.getItem(TF.KEY_XP)||'0');};TF.getLvl=function(){return parseInt(localStorage.getItem(TF.KEY_LVL)||'1');};
+TF.saveXP=function(x,l){localStorage.setItem(TF.KEY_XP,x);localStorage.setItem(TF.KEY_LVL,l);};
+TF.xpTick=function(){var l=TF.getLvl();if(l>=TF.MAX_LEVEL)return;var x=TF.getXP()+60;if(x>=TF.XP_PER_LEVEL){x=0;l=Math.min(l+1,TF.MAX_LEVEL);TF.saveXP(x,l);TF.showLevelUp(l);}else TF.saveXP(x,l);};
+TF.startTicker=function(){if(TF._ticker)return;TF._ticker=setInterval(TF.xpTick,60000);};
+TF.getUser=function(){try{return JSON.parse(localStorage.getItem(TF.KEY_USER)||'null');}catch(e){return null;}};
+TF.saveUser=function(u){localStorage.setItem(TF.KEY_USER,JSON.stringify(u));};
+TF.showLevelUp=function(lvl){var rank=TF.getRank(lvl);var u=TF.getUser();var name=(u&&u.name)||'Usuario';var el=document.createElement('div');el.style.cssText='position:fixed;top:14px;right:14px;z-index:9999;max-width:250px;opacity:0;transform:translateX(18px);transition:all .28s cubic-bezier(.22,1,.36,1);pointer-events:none';el.innerHTML='<div style="background:linear-gradient(135deg,rgba(8,0,20,.97),rgba(16,0,40,.97));border:1px solid rgba(168,85,247,.45);border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(109,36,217,.4)"><div style="height:2px;background:linear-gradient(90deg,transparent,#e879f9,#a855f7,transparent)"></div><div style="padding:11px 13px;display:flex;align-items:center;gap:9px"><div style="font-size:22px">'+rank.icon+'</div><div><div style="font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#a855f7">⚡ SUBISTE DE NIVEL</div><div style="font-size:13px;font-weight:800;color:#fff">'+name+' — Nivel '+lvl+'</div><div style="font-size:10px;color:rgba(255,255,255,.45)">'+rank.label+'</div></div></div></div>';document.body.appendChild(el);requestAnimationFrame(function(){requestAnimationFrame(function(){el.style.opacity='1';el.style.transform='translateX(0)';});});setTimeout(function(){el.style.opacity='0';el.style.transform='translateX(18px)';setTimeout(function(){el.remove();},300);},3500);};
+TF.toast=function(msg,type,ms){var c=document.getElementById('tf-tc');if(!c){c=document.createElement('div');c.id='tf-tc';c.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none';document.body.appendChild(c);}var el=document.createElement('div');el.style.cssText='background:rgba(4,0,12,.98);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:8px 14px;font-size:12px;color:#fff;opacity:0;transform:translateY(5px);transition:all .16s;font-family:inherit';el.textContent=msg;c.appendChild(el);requestAnimationFrame(function(){requestAnimationFrame(function(){el.style.opacity='1';el.style.transform='translateY(0)';});});setTimeout(function(){el.style.opacity='0';setTimeout(function(){el.remove();},200);},ms||2000);};
+TF.injectProfile=function(){
+  var u=TF.getUser();
+  var ex=document.getElementById('tf-pw');if(ex)ex.remove();
+  var w=document.createElement('div');w.id='tf-pw';
+  w.style.cssText='cursor:pointer;flex-shrink:0;width:30px;height:30px;border-radius:50%;overflow:hidden;border:1.5px solid rgba(168,85,247,.4);display:grid;place-items:center;background:rgba(109,36,217,.2)';
+  if(u&&u.avatar){
+    var img=document.createElement('img');img.src=u.avatar;img.style.cssText='width:100%;height:100%;object-fit:cover;display:block';
+    w.appendChild(img);
+  } else {
+    w.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(168,85,247,.8)" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
+  }
+  w.onclick=function(){if(!u){TF.showLogin();return;}TF.showProfilePanel();};
+  var hdr=document.getElementById('hdr');if(hdr)hdr.appendChild(w);
+};
+TF.updateProfileUI=function(){TF.injectProfile();};
+TF.showLogin=function(cb){if(document.getElementById('tf-lm'))return;var u=TF.getUser();var isE=!!u;var modal=document.createElement('div');modal.id='tf-lm';modal.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.75);backdrop-filter:blur(14px);display:flex;align-items:flex-end;justify-content:center';modal.innerHTML='<div style="width:min(100%,420px);background:rgba(6,0,15,.99);border:1px solid rgba(255,255,255,.09);border-radius:16px 16px 0 0;padding:18px;display:flex;flex-direction:column;gap:13px;animation:lIn .3s cubic-bezier(.22,1,.36,1) both"><style>@keyframes lIn{from{transform:translateY(36px);opacity:0}to{transform:none;opacity:1}}</style><div style="display:flex;align-items:center;justify-content:space-between"><b style="font-size:14px">'+(isE?'Editar perfil':'Bienvenido a TFReader')+'</b>'+(isE?'<button onclick="document.getElementById(\'tf-lm\').remove()" style="width:26px;height:26px;border-radius:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);cursor:pointer;color:rgba(255,255,255,.5);font-size:14px;display:grid;place-items:center;font-family:inherit">✕</button>':'')+'</div><div><div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:5px;font-weight:600">Nombre</div><input id="tf-ln" type="text" placeholder="Tu nombre…" maxlength="24" value="'+(u&&u.name?u.name:'')+'" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:9px 11px;color:#ede8f8;font-size:13px;font-family:inherit;outline:none"/></div>'+(!isE?'<div><div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:5px;font-weight:600">Contraseña</div><input id="tf-lp" type="password" placeholder="Mínimo 4 caracteres…" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:9px 11px;color:#ede8f8;font-size:13px;font-family:inherit;outline:none"/></div>':'')+'<button id="tf-ls" style="padding:11px;border-radius:10px;background:linear-gradient(135deg,#e91e8c,#a855f7);border:none;color:#fff;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer">'+(isE?'Guardar':'Crear perfil')+'</button></div>';document.body.appendChild(modal);document.getElementById('tf-ls').onclick=function(){var nm=(document.getElementById('tf-ln').value||'').trim();if(!nm){TF.toast('Escribe tu nombre');return;}if(!isE){var pw=(document.getElementById('tf-lp').value||'').trim();if(pw.length<4){TF.toast('Mínimo 4 caracteres');return;}TF.saveUser({name:nm,pass:pw,avatar:null});}else{var ex2=TF.getUser()||{};ex2.name=nm;TF.saveUser(ex2);}modal.remove();TF.toast('¡Bienvenido, '+nm+'!');TF.updateProfileUI();if(cb)cb();};modal.onclick=function(e){if(e.target===modal)modal.remove();};};
+TF.showProfilePanel=function(){if(document.getElementById('tf-pp'))return;var u=TF.getUser()||{};var lvl=TF.getLvl();var rank=TF.getRank(lvl);var pct=Math.round((TF.getXP()/TF.XP_PER_LEVEL)*100);var p=document.createElement('div');p.id='tf-pp';p.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.7);backdrop-filter:blur(14px);display:flex;align-items:flex-end;justify-content:center';p.innerHTML='<div style="width:min(100%,420px);background:rgba(6,0,15,.99);border:1px solid rgba(255,255,255,.09);border-radius:16px 16px 0 0;padding:18px;display:flex;flex-direction:column;gap:13px;animation:lIn .3s cubic-bezier(.22,1,.36,1) both"><div style="display:flex;align-items:center;justify-content:space-between"><b style="font-size:13.5px">Mi perfil</b><button onclick="document.getElementById(\'tf-pp\').remove()" style="width:26px;height:26px;border-radius:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);cursor:pointer;color:rgba(255,255,255,.5);font-size:14px;display:grid;place-items:center;font-family:inherit">✕</button></div><div style="display:flex;align-items:center;gap:11px"><div style="width:50px;height:50px;border-radius:50%;background:rgba(109,36,217,.15);border:2px solid rgba(168,85,247,.3);display:grid;place-items:center;overflow:hidden">'+(u.avatar?'<img src="'+u.avatar+'" style="width:100%;height:100%;object-fit:cover">':'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(168,85,247,.6)" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>')+'</div><div><div style="font-size:14px;font-weight:800">'+(u.name||'Usuario')+'</div><div style="font-size:11px;color:#a855f7;margin-top:2px">'+rank.icon+' '+rank.label+'</div></div></div><div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:9px;padding:11px"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:11px;font-weight:700">Nivel '+lvl+'</span><span style="font-size:10px;color:rgba(255,255,255,.5)">'+pct+'%</span></div><div style="height:4px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden"><div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,#e91e8c,#a855f7);border-radius:99px"></div></div></div><div style="display:flex;gap:7px"><button onclick="document.getElementById(\'tf-pp\').remove();TF.showLogin(function(){TF.injectProfile();})" style="flex:1;padding:9px;border-radius:9px;background:rgba(109,36,217,.14);border:1px solid rgba(168,85,247,.24);color:#a855f7;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">✏️ Editar</button><button onclick="if(confirm(\'¿Cerrar sesión?\')){localStorage.removeItem(\'tfapp_user\');document.getElementById(\'tf-pp\').remove();TF.injectProfile();}" style="padding:9px;border-radius:9px;background:rgba(244,63,94,.07);border:1px solid rgba(244,63,94,.2);color:#f43f5e;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">Salir</button></div></div>';document.body.appendChild(p);p.onclick=function(e){if(e.target===p)p.remove();};};
+TF.startTicker();TF.injectProfile();
+var _u=TF.getUser();if(!_u)setTimeout(function(){TF.showLogin();},800);
+</script>
+
+<nav id="tfr-nav" style="position:fixed;bottom:0;left:0;right:0;z-index:5000;background:rgba(6,0,15,.96);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-around;height:58px;padding-bottom:env(safe-area-inset-bottom,0px)">
+  <a href="go:principal" style="display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.38);text-decoration:none;padding:5px 10px;border-radius:12px;transition:all .15s">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+    <span style="font-size:9px;font-weight:600">Inicio</span>
+  </a>
+  <a href="go:tfmusic" style="display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.38);text-decoration:none;padding:5px 10px;border-radius:12px;transition:all .15s">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+    <span style="font-size:9px;font-weight:600">Musica</span>
+  </a>
+  <a href="go:tfvcore" style="display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.38);text-decoration:none;padding:5px 10px;border-radius:12px;transition:all .15s">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+    <span style="font-size:9px;font-weight:600">Navegar</span>
+  </a>
+  <a href="go:Tfgames" style="display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.38);text-decoration:none;padding:5px 10px;border-radius:12px;transition:all .15s">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="4"></rect><path d="M6 12h4M8 10v4"></path><circle cx="16" cy="11" r="1" fill="currentColor" stroke="none"></circle><circle cx="18" cy="13" r="1" fill="currentColor" stroke="none"></circle></svg>
+    <span style="font-size:9px;font-weight:600">Juegos</span>
+  </a>
+  <a href="go:wallpapers" style="display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.38);text-decoration:none;padding:5px 10px;border-radius:12px;transition:all .15s">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>
+    <span style="font-size:9px;font-weight:600">Wallpapers</span>
+  </a>
+  <a href="go:tftv" style="display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(255,255,255,.38);text-decoration:none;padding:5px 10px;border-radius:12px;transition:all .15s">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"></rect><path d="M9 3h6M12 7v2"></path></svg>
+    <span style="font-size:9px;font-weight:600">TFTV</span>
+  </a>
+</nav>
+</body>
+</html>
