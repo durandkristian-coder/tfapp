@@ -32,7 +32,7 @@ jobs:
           printf '%s' '{
             "name": "tfapp",
             "version": "1.0.0",
-            "description": "TFV App",
+            "description": "TFAPP - The Friendly Village",
             "dependencies": {
               "@capacitor/core": "6.2.0",
               "@capacitor/android": "6.2.0",
@@ -44,7 +44,7 @@ jobs:
         run: |
           printf '%s' '{
             "appId": "com.tfv.tfapp",
-            "appName": "TFApp",
+            "appName": "TFAPP",
             "webDir": "www",
             "server": { "androidScheme": "https" },
             "android": {
@@ -59,13 +59,14 @@ jobs:
         run: |
           mkdir -p www
           cp *.html www/
-          python3 - << 'PYEOF'
-          html = """<!DOCTYPE html>
-          <html lang="es">
+          python3 -c "
+          html = open('www/splash.html').read() if __import__('os').path.exists('www/splash.html') else ''
+          splash = '''<!DOCTYPE html>
+          <html lang=\"es\">
           <head>
-          <meta charset="utf-8"/>
-          <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-          <title>TFApp</title>
+          <meta charset=\"utf-8\"/>
+          <meta name=\"viewport\" content=\"width=device-width,initial-scale=1,viewport-fit=cover\"/>
+          <title>TFAPP</title>
           <style>
           *{margin:0;padding:0;box-sizing:border-box}
           html,body{height:100%;background:#0a0011;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px}
@@ -79,19 +80,18 @@ jobs:
           </style>
           </head>
           <body>
-          <img class="logo" src="https://i.imgur.com/lALmGx6.png" alt="TFApp"/>
+          <img class=\"logo\" src=\"https://i.imgur.com/lALmGx6.png\" alt=\"TFAPP\"/>
           <div>
-            <div class="name">TFAPP</div>
-            <div class="sub" style="margin-top:5px">The Friendly Village</div>
+            <div class=\"name\">TFAPP</div>
+            <div class=\"sub\" style=\"margin-top:5px\">The Friendly Village</div>
           </div>
-          <div class="bar-wrap"><div class="bar"></div></div>
-          <script>setTimeout(function(){window.location.replace('hub.html');},2000);</script>
+          <div class=\"bar-wrap\"><div class=\"bar\"></div></div>
+          <script>setTimeout(function(){window.location.replace(\"hub.html\");},2000);</script>
           </body>
-          </html>"""
-          with open("www/index.html", "w") as f:
-              f.write(html)
-          print("index.html creado")
-          PYEOF
+          </html>'''
+          open('www/index.html', 'w').write(splash)
+          print('index.html creado')
+          "
 
       - name: Instalar dependencias
         run: npm install
@@ -102,9 +102,12 @@ jobs:
       - name: Sincronizar Capacitor
         run: npx cap sync android
 
-      - name: Generar iconos desde logo TFV
+      - name: Generar iconos TFV
         run: |
-          # Borrar iconos por defecto de Capacitor para evitar duplicados
+          curl -L "https://i.imgur.com/lALmGx6.png" -o logo.png
+          convert -size 1024x1024 xc:"#1a0035" bg.png
+          convert bg.png logo.png -gravity center -resize 800x800 -composite icon_full.png
+
           rm -rf android/app/src/main/res/mipmap-mdpi
           rm -rf android/app/src/main/res/mipmap-hdpi
           rm -rf android/app/src/main/res/mipmap-xhdpi
@@ -112,13 +115,6 @@ jobs:
           rm -rf android/app/src/main/res/mipmap-xxxhdpi
           rm -rf android/app/src/main/res/mipmap-anydpi-v26
 
-          curl -L "https://i.imgur.com/lALmGx6.png" -o logo.png
-
-          # Base con fondo morado
-          convert -size 1024x1024 xc:"#1a0035" bg.png
-          convert bg.png logo.png -gravity center -resize 800x800 -composite icon_full.png
-
-          # Tamaños estándar
           for row in "mipmap-mdpi 48" "mipmap-hdpi 72" "mipmap-xhdpi 96" "mipmap-xxhdpi 144" "mipmap-xxxhdpi 192"; do
             folder=$(echo $row | cut -d' ' -f1)
             size=$(echo $row | cut -d' ' -f2)
@@ -128,7 +124,6 @@ jobs:
             convert icon_full.png -resize "${size}x${size}" "$dir/ic_launcher_round.png"
           done
 
-          # Foreground adaptive icon
           for row in "mipmap-mdpi 108" "mipmap-hdpi 162" "mipmap-xhdpi 216" "mipmap-xxhdpi 324" "mipmap-xxxhdpi 432"; do
             folder=$(echo $row | cut -d' ' -f1)
             size=$(echo $row | cut -d' ' -f2)
@@ -140,60 +135,60 @@ jobs:
               "$dir/ic_launcher_foreground.png"
           done
 
-          # Adaptive icon XML
           mkdir -p android/app/src/main/res/mipmap-anydpi-v26
-          python3 -c "
-          xml = '''<?xml version=\"1.0\" encoding=\"utf-8\"?>
-          <adaptive-icon xmlns:android=\"http://schemas.android.com/apk/res/android\">
-            <background android:drawable=\"@color/ic_launcher_background\"/>
-            <foreground android:drawable=\"@mipmap/ic_launcher_foreground\"/>
-          </adaptive-icon>'''
-          open('android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml','w').write(xml)
-          open('android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml','w').write(xml)
-          "
+          printf '%s' '<?xml version="1.0" encoding="utf-8"?>
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+            <background android:drawable="@color/ic_launcher_background"/>
+            <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+          </adaptive-icon>' > android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+          cp android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml \
+             android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
 
-          # Color de fondo
-          mkdir -p android/app/src/main/res/values
+          # Editar el color en ic_launcher_background.xml que Capacitor ya creó
           python3 -c "
-          import os, re
-          colors_path = 'android/app/src/main/res/values/colors.xml'
-          new_color = '    <color name=\"ic_launcher_background\">#1a0035</color>'
-          if os.path.exists(colors_path):
-              content = open(colors_path).read()
-              if 'ic_launcher_background' not in content:
-                  content = content.replace('</resources>', new_color + '\n</resources>')
-                  open(colors_path, 'w').write(content)
+          import re, os
+          path = 'android/app/src/main/res/values/ic_launcher_background.xml'
+          if os.path.exists(path):
+              c = open(path).read()
+              c = re.sub(r'<color name=\"ic_launcher_background\">[^<]+</color>',
+                         '<color name=\"ic_launcher_background\">#1a0035</color>', c)
+              open(path, 'w').write(c)
+              print('Color actualizado en', path)
           else:
-              open(colors_path, 'w').write('<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n' + new_color + '\n</resources>\n')
+              os.makedirs('android/app/src/main/res/values', exist_ok=True)
+              open(path, 'w').write('<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n    <color name=\"ic_launcher_background\">#1a0035</color>\n</resources>\n')
+              print('ic_launcher_background.xml creado')
           "
 
       - name: Agregar permisos en AndroidManifest.xml
         run: |
-          python3 - << 'PYEOF'
-          perms = [
-            'android.permission.INTERNET',
-            'android.permission.POST_NOTIFICATIONS',
-            'android.permission.READ_MEDIA_IMAGES',
-            'android.permission.READ_MEDIA_VIDEO',
-            'android.permission.CAMERA',
-            'android.permission.FOREGROUND_SERVICE',
-            'android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK',
-            'android.permission.WAKE_LOCK',
-            'android.permission.VIBRATE',
-          ]
-          extras = [
-            '<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />',
-            '<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />',
-          ]
-          lines = ['    <uses-permission android:name="{}" />'.format(p) for p in perms]
-          lines += ['    ' + e for e in extras]
-          block = '\n'.join(lines) + '\n    '
+          python3 -c "
           path = 'android/app/src/main/AndroidManifest.xml'
-          content = open(path).read()
-          content = content.replace('<application', block + '<application', 1)
-          open(path, 'w').write(content)
-          print("Permisos agregados OK")
-          PYEOF
+          perms = [
+              'android.permission.INTERNET',
+              'android.permission.POST_NOTIFICATIONS',
+              'android.permission.READ_MEDIA_IMAGES',
+              'android.permission.READ_MEDIA_VIDEO',
+              'android.permission.CAMERA',
+              'android.permission.FOREGROUND_SERVICE',
+              'android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK',
+              'android.permission.WAKE_LOCK',
+              'android.permission.VIBRATE',
+          ]
+          lines = ['    <uses-permission android:name=\"{}\"/>'.format(p) for p in perms]
+          lines += [
+              '    <uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\" android:maxSdkVersion=\"32\"/>',
+              '    <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" android:maxSdkVersion=\"29\"/>',
+          ]
+          block = '\n'.join(lines) + '\n'
+          c = open(path).read()
+          if 'POST_NOTIFICATIONS' not in c:
+              c = c.replace('<application', block + '    <application', 1)
+              open(path, 'w').write(c)
+              print('Permisos agregados')
+          else:
+              print('Permisos ya existen')
+          "
 
       - name: Construir APK
         run: |
@@ -204,6 +199,6 @@ jobs:
       - name: Subir APK
         uses: actions/upload-artifact@v4
         with:
-          name: TFApp-v1
+          name: TFAPP-v1
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
