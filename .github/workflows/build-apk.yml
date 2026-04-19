@@ -104,6 +104,14 @@ jobs:
 
       - name: Generar iconos desde logo TFV
         run: |
+          # Borrar iconos por defecto de Capacitor para evitar duplicados
+          rm -rf android/app/src/main/res/mipmap-mdpi
+          rm -rf android/app/src/main/res/mipmap-hdpi
+          rm -rf android/app/src/main/res/mipmap-xhdpi
+          rm -rf android/app/src/main/res/mipmap-xxhdpi
+          rm -rf android/app/src/main/res/mipmap-xxxhdpi
+          rm -rf android/app/src/main/res/mipmap-anydpi-v26
+
           curl -L "https://i.imgur.com/lALmGx6.png" -o logo.png
 
           # Base con fondo morado
