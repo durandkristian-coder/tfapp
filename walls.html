@@ -645,14 +645,14 @@ async function injectTasteSection(){
 }
 
 var TFTV_MOVIES=[
-  {title:'Dune: Parte 2',year:2024,genre:'Sci-Fi',img:'https://image.tmdb.org/t/p/w300/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg',go:'go:tftv'},
-  {title:'Oppenheimer',year:2023,genre:'Drama',img:'https://image.tmdb.org/t/p/w300/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg',go:'go:tftv'},
-  {title:'Spider-Man: Across the Spider-Verse',year:2023,genre:'Animación',img:'https://image.tmdb.org/t/p/w300/iiZZdoQBEYBv6id8su7ImL0oCbD.jpg',go:'go:tftv'},
-  {title:'Guardianes de la Galaxia Vol. 3',year:2023,genre:'Acción',img:'https://image.tmdb.org/t/p/w300/r2J02Z2OpNTctfOSN1Ydgii51I3.jpg',go:'go:tftv'},
-  {title:'John Wick 4',year:2023,genre:'Acción',img:'https://image.tmdb.org/t/p/w300/vZloFAK7NmvMGKE7VkF5UHaz0I.jpg',go:'go:tftv'},
-  {title:'The Batman',year:2022,genre:'Thriller',img:'https://image.tmdb.org/t/p/w300/74xTEgt7R36Fpooo50r9T25onhq.jpg',go:'go:tftv'},
-  {title:'Everything Everywhere All at Once',year:2022,genre:'Drama',img:'https://image.tmdb.org/t/p/w300/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg',go:'go:tftv'},
-  {title:'Top Gun: Maverick',year:2022,genre:'Acción',img:'https://image.tmdb.org/t/p/w300/62HCnUTziyWcpDabo8diEQDg65d.jpg',go:'go:tftv'},
+  {title:'Dune: Parte 2',year:2024,genre:'Sci-Fi',img:'https://image.tmdb.org/t/p/w300/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg',go:'tv.html'},
+  {title:'Oppenheimer',year:2023,genre:'Drama',img:'https://image.tmdb.org/t/p/w300/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg',go:'tv.html'},
+  {title:'Spider-Man: Across the Spider-Verse',year:2023,genre:'Animación',img:'https://image.tmdb.org/t/p/w300/iiZZdoQBEYBv6id8su7ImL0oCbD.jpg',go:'tv.html'},
+  {title:'Guardianes de la Galaxia Vol. 3',year:2023,genre:'Acción',img:'https://image.tmdb.org/t/p/w300/r2J02Z2OpNTctfOSN1Ydgii51I3.jpg',go:'tv.html'},
+  {title:'John Wick 4',year:2023,genre:'Acción',img:'https://image.tmdb.org/t/p/w300/vZloFAK7NmvMGKE7VkF5UHaz0I.jpg',go:'tv.html'},
+  {title:'The Batman',year:2022,genre:'Thriller',img:'https://image.tmdb.org/t/p/w300/74xTEgt7R36Fpooo50r9T25onhq.jpg',go:'tv.html'},
+  {title:'Everything Everywhere All at Once',year:2022,genre:'Drama',img:'https://image.tmdb.org/t/p/w300/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg',go:'tv.html'},
+  {title:'Top Gun: Maverick',year:2022,genre:'Acción',img:'https://image.tmdb.org/t/p/w300/62HCnUTziyWcpDabo8diEQDg65d.jpg',go:'tv.html'},
 ];
 var TFTV_PHRASES=['Con ganas de ver alguna película?','Para tu próxima noche de cine 🍿','No sabes qué ver esta noche?','Las mejores del momento','¿Ya viste estas?'];
 
@@ -665,7 +665,7 @@ function injectTFTVPromo(){
   var hdr=document.createElement('div');hdr.style.cssText='display:flex;align-items:flex-end;justify-content:space-between;padding:0 12px;margin-bottom:12px';
   var left=document.createElement('div');
   left.innerHTML='<div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px">Películas · TFTV</div><div style="font-size:17px;font-weight:800;color:var(--text)">'+phrase+'</div>';
-  var more=document.createElement('a');more.href='go:tftv';more.style.cssText='font-size:12px;font-weight:700;color:#60a5fa;text-decoration:none;white-space:nowrap;padding-bottom:2px';more.textContent='Ver más →';
+  var more=document.createElement('a');more.href='tv.html';more.style.cssText='font-size:12px;font-weight:700;color:#60a5fa;text-decoration:none;white-space:nowrap;padding-bottom:2px';more.textContent='Ver más →';
   hdr.appendChild(left);hdr.appendChild(more);
   var row=document.createElement('div');row.style.cssText='display:flex;gap:8px;overflow-x:auto;padding:0 12px;scrollbar-width:none';
   movies.forEach(function(m){
@@ -1058,7 +1058,7 @@ window.TF=window.TF||{};
 var TF=window.TF;
 TF.KEY_USER='tfapp_user';TF.KEY_XP='tfapp_xp';TF.KEY_LVL='tfapp_level';
 TF.XP_PER_LEVEL=1800;TF.MAX_LEVEL=25;
-TF.SECTIONS={hub:{go:'go:principal'},music:{go:'go:tfmusic'},core:{go:'go:tfvcore'},games:{go:'go:Tfgames'},walls:{go:'go:wallpapers'},tv:{go:'go:tftv'}};
+TF.SECTIONS={hub:{go:'hub.html'},music:{go:'music.html'},core:{go:'core.html'},games:{go:'games.html'},walls:{go:'walls.html'},tv:{go:'tv.html'}};
 TF.RANKS=[{min:1,max:5,rank:'I',icon:'⚔️',label:'Rango I'},{min:6,max:10,rank:'II',icon:'🛡️',label:'Rango II'},{min:11,max:15,rank:'III',icon:'👑',label:'Rango III'},{min:16,max:20,rank:'IV',icon:'💎',label:'Rango IV'},{min:21,max:25,rank:'GIGACHAD',icon:'💪',label:'GigaChad'}];
 TF.getRank=function(lvl){for(var i=0;i<TF.RANKS.length;i++){var r=TF.RANKS[i];if(lvl>=r.min&&lvl<=r.max)return r;}return TF.RANKS[TF.RANKS.length-1];};
 TF.getXP=function(){return parseInt(localStorage.getItem(TF.KEY_XP)||'0');};
@@ -1084,7 +1084,7 @@ TF.injectNav=function(activeSection){
   var style=document.createElement('style');style.textContent=TF.NAV_CSS;document.head.appendChild(style);
   var nav=document.createElement('div');nav.id='tf-nav';
   var order=['home','music','browser','games','walls','tv'];
-  var goMap={home:TF.SECTIONS.hub.go,music:TF.SECTIONS.music.go,browser:TF.SECTIONS.core.go,games:TF.SECTIONS.games.go,walls:TF.SECTIONS.walls.go,tv:'go:tftv'};
+  var goMap={home:TF.SECTIONS.hub.go,music:TF.SECTIONS.music.go,browser:TF.SECTIONS.core.go,games:TF.SECTIONS.games.go,walls:TF.SECTIONS.walls.go,tv:'tv.html'};
   var labels={home:'Inicio',music:'Musica',browser:'Navegar',games:'Juegos',walls:'Walls',tv:'TFTV'};
   order.forEach(function(key){
     var btn=document.createElement('button');btn.className='tf-nb'+(key===activeSection?' on':'');
