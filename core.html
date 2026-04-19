@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
@@ -422,7 +422,7 @@ var SHORTCUTS_DEFAULT=[
   {l:'YouTube',   u:'https://www.youtube.com',   c:'#ff0000'},
   {l:'Discord',   u:'https://discord.gg/uhtyWj5tC', c:'#5865f2'},
   {l:'WhatsApp',  u:'https://web.whatsapp.com',  c:'#25d366'},
-  {l:'ChatTFV',   u:'nora.html',                c:'#7c3aed'},
+  {l:'ChatTFV',   u:'go:chatbot',                c:'#7c3aed'},
 ];
 function getCustomShortcuts(){try{return JSON.parse(localStorage.getItem('tfcore_sc')||'[]');}catch(e){return[];}}
 function saveCustomShortcuts(a){localStorage.setItem('tfcore_sc',JSON.stringify(a));}
@@ -1102,7 +1102,7 @@ function bindEvents(){
   var _bnt=$('btnNewTab');if(_bnt)_bnt.onclick=function(){newTab();};
   backBtn.onclick=navBack;fwdBtn.onclick=navFwd;reloadBtn.onclick=navReload;
   var _bh2=$('btnHome2');if(_bh2)_bh2.onclick=function(){renderHome(activeId);};
-  var _bch=$('btnChat');if(_bch)_bch.onclick=function(){window.location.href='nora.html';};
+  var _bch=$('btnChat');if(_bch)_bch.onclick=function(){window.location.href='go:chatbot';};
   $('homeBtn').onclick=function(){var t=getTab();if(t){if(t.url)t.back.push(t.url);t.url='';t.fwd=[];}renderHome(activeId);updateNavUI();};
   $('urlDisplay').onclick=openUrlInput;
   urlField.addEventListener('input',function(){renderSugg(urlField.value);});
@@ -1358,7 +1358,7 @@ function updateTabCount(){
   var bh=document.getElementById('btnHome2');
   var bc=document.getElementById('btnChat');
   if(bh)bh.onclick=function(){renderHome(activeId);};
-  if(bc)bc.onclick=function(){window.location.href='nora.html';};
+  if(bc)bc.onclick=function(){window.location.href='go:chatbot';};
 })();
 
 /* ── Reload in menu ── */
@@ -1649,7 +1649,7 @@ function TF_openChatWithQuery(query){
     var pending=JSON.parse(localStorage.getItem('ctfv_pending_query')||'null');
     localStorage.setItem('ctfv_pending_query',JSON.stringify({q:query,ts:Date.now()}));
   }catch(e){}
-  window.location.href='nora.html';
+  window.location.href='go:chatbot';
 }
 
 
@@ -1669,7 +1669,7 @@ function tfchatContinue(el) {
     db.convs.unshift(conv);
     localStorage.setItem('ctfv5',JSON.stringify({convs:db.convs.slice(0,60)}));
   } catch(e){}
-  window.location.href='nora.html';
+  window.location.href='go:chatbot';
 }
 
 (function(){
@@ -1769,12 +1769,12 @@ TF.MAX_LEVEL = 25;
 
 /* ── SECTIONS ── */
 TF.SECTIONS = {
-  hub:  { go:'hub.html', icon:'home',    label:'Inicio'     },
-  music:{ go:'music.html',   icon:'music',   label:'Música'     },
-  core: { go:'core.html',   icon:'browser', label:'Navegador'  },
-  games:{ go:'games.html',   icon:'games',   label:'Juegos'     },
-  walls:{ go:'walls.html',icon:'walls',   label:'Wallpapers' },
-  tv:   { go:'tv.html',      icon:'tv',      label:'TFTV'       },
+  hub:  { go:'go:principal', icon:'home',    label:'Inicio'     },
+  music:{ go:'go:tfmusic',   icon:'music',   label:'Música'     },
+  core: { go:'go:tfvcore',   icon:'browser', label:'Navegador'  },
+  games:{ go:'go:Tfgames',   icon:'games',   label:'Juegos'     },
+  walls:{ go:'go:wallpapers',icon:'walls',   label:'Wallpapers' },
+  tv:   { go:'go:tftv',      icon:'tv',      label:'TFTV'       },
 };
 
 /* ── XP / LEVEL ── */
@@ -1974,7 +1974,7 @@ TF.injectNav = function(activeSection){
   var nav=document.createElement('div');
   nav.id='tf-nav';
   var order=['home','music','browser','games','walls','tv'];
-  var goMap={home:TF.SECTIONS.hub.go, music:TF.SECTIONS.music.go, browser:TF.SECTIONS.core.go, games:TF.SECTIONS.games.go, walls:TF.SECTIONS.walls.go, tv:'tv.html'};
+  var goMap={home:TF.SECTIONS.hub.go, music:TF.SECTIONS.music.go, browser:TF.SECTIONS.core.go, games:TF.SECTIONS.games.go, walls:TF.SECTIONS.walls.go, tv:'go:tftv'};
   var labels={home:'Inicio',music:'Música',browser:'Navegar',games:'Juegos',walls:'Wallpapers',tv:'TFTV'};
 
   order.forEach(function(key){
