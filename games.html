@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>TFGames</title>
+<style>
+:root{--bg:#02000a;--bg2:#0a001e;--bg3:#14003a;--ac:#a855f7;--ac2:#7c3aed;--pk:#e91e8c;--border:rgba(255,255,255,.06);--border2:rgba(168,85,247,.3);--glass:rgba(255,255,255,.04);--text:#f0eaf8;--muted:#7864a0;--soft:#1e1535;--sb:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--text);-webkit-font-smoothing:antialiased;background:var(--bg);overflow-x:hidden}
+#hdr{position:fixed;top:0;left:0;right:0;z-index:300;height:52px;background:rgba(2,0,10,.96);backdrop-filter:blur(28px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:0 10px}
+.h-srch{min-width:0}
+.h-brand{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.h-brand img{width:28px;height:28px;border-radius:7px;object-fit:cover}
+.h-brand-t{font-size:15px;font-weight:900;background:linear-gradient(90deg,#d8b4fe,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.h-srch{flex:1;height:33px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:99px;display:flex;align-items:center;padding:0 11px;gap:7px;transition:border-color .14s}
+.h-srch:focus-within{border-color:rgba(168,85,247,.5)}
+#sIn{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:12.5px;font-family:inherit}
+#sIn::placeholder{color:var(--muted)}
+#sCl{display:none;background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);line-height:0;flex-shrink:0}
+#tabs{display:none}
+.chip{display:none}
+#page{padding-top:52px;padding-bottom:calc(76px + var(--sb))}
+/* HERO */
+#hero{position:relative;overflow:hidden;background:var(--bg2)}
+.h-track{display:flex;transition:transform .4s cubic-bezier(.25,.46,.45,.94)}
+.h-slide{flex:0 0 100%;padding:12px 12px 0}
+.h-card{border-radius:14px;overflow:hidden;position:relative;cursor:pointer;border:1px solid var(--border2);background:var(--bg3)}
+.h-img{width:100%;height:188px;object-fit:cover;display:block}
+.h-img-ph{width:100%;height:188px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--bg3),#200060)}
+.h-img-ph .l{font-size:52px;font-weight:900;opacity:.35;color:#fff;letter-spacing:-2px}
+.h-grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.9) 0%,rgba(0,0,0,.2) 55%,transparent 100%);pointer-events:none}
+.h-actions{position:absolute;top:8px;right:8px;display:flex;gap:5px}
+.h-get{height:28px;padding:0 13px;border-radius:99px;border:none;font-size:10.5px;font-weight:800;font-family:inherit;cursor:pointer;background:linear-gradient(135deg,var(--pk),var(--ac));color:#fff;box-shadow:0 4px 12px rgba(168,85,247,.4)}
+.h-info{position:absolute;bottom:0;left:0;right:0;padding:12px}
+.h-gen{display:inline-block;font-size:8px;font-weight:800;padding:2px 7px;border-radius:3px;background:rgba(168,85,247,.4);color:#ddd6fe;letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px}
+.h-title{font-size:17px;font-weight:900;text-shadow:0 2px 8px rgba(0,0,0,.7)}
+.h-meta{font-size:10px;color:rgba(255,255,255,.55);margin-top:3px}
+.h-dots{display:flex;justify-content:center;gap:5px;padding:8px 0 12px}
+.dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.18);cursor:pointer;transition:all .2s}
+.dot.on{width:18px;border-radius:99px;background:var(--ac)}
+/* SECTIONS */
+.sec{padding:0 12px;margin-bottom:22px}
+.s-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.s-ttl{font-size:13.5px;font-weight:800;background:linear-gradient(90deg,#f9a8d4,#e91e8c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.s-cnt{font-size:10px;color:var(--muted)}
+/* HORIZONTAL ROW */
+.hrow{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.hrow::-webkit-scrollbar{display:none}
+.hc{flex:0 0 126px;cursor:pointer}
+.hc:active{opacity:.8}
+.hc-img-wrap{width:126px;height:82px;border-radius:10px;overflow:hidden;background:var(--soft);border:1px solid var(--border);position:relative;margin-bottom:5px}
+.hc-img-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.hc-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--soft),#200050)}
+.hc-ph .l{font-size:22px;font-weight:900;opacity:.45;color:#fff}
+.hc-rat{position:absolute;bottom:3px;right:3px;height:16px;padding:0 5px;border-radius:4px;background:rgba(0,0,0,.78);font-size:9px;font-weight:800;display:flex;align-items:center;gap:2px}
+.hc-name{font-size:10px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hc-sub{font-size:9px;color:var(--muted);margin-top:1px}
+/* BIG GRID */
+.bgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bgc{border-radius:11px;overflow:hidden;cursor:pointer;border:1px solid var(--border);background:var(--soft)}
+.bgc:active{opacity:.8}
+.bgc-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+.bgc-ph{width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--soft),#200050)}
+.bgc-ph .l{font-size:28px;font-weight:900;opacity:.4;color:#fff}
+.bgc-body{padding:7px 9px 9px}
+.bgc-name{font-size:11px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bgc-meta{display:flex;align-items:center;gap:5px;margin-top:3px}
+.bgc-rat{font-size:9px;font-weight:700}
+.bgc-cat{font-size:9px;color:var(--muted)}
+/* LIST */
+.glist{display:flex;flex-direction:column}
+.gli{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+.gli:last-child{border-bottom:none}
+.gli:active{background:rgba(255,255,255,.02)}
+.gli-n{font-size:8px;font-weight:800;color:var(--muted);width:16px;text-align:center;flex-shrink:0}
+.gli-cover{width:52px;height:52px;border-radius:10px;overflow:hidden;background:var(--soft);flex-shrink:0;position:relative}
+.gli-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.gli-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--soft),#200050)}
+.gli-ph .l{font-size:16px;font-weight:900;opacity:.5;color:#fff}
+.gli-info{flex:1;min-width:0}
+.gli-name{font-size:12.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gli-dev{font-size:10px;color:var(--muted);margin-top:1px}
+.gli-stars{font-size:9.5px;margin-top:3px}
+.gli-btn{flex-shrink:0;height:28px;padding:0 13px;border-radius:99px;border:1.5px solid rgba(168,85,247,.5);background:transparent;color:var(--ac);font-size:10.5px;font-weight:800;font-family:inherit;cursor:pointer}
+.gli-btn:active{background:rgba(168,85,247,.1)}
+/* OFFLINE */
+.ogrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:0 12px}
+.oc{border-radius:10px;overflow:hidden;cursor:pointer;border:1px solid var(--border);background:var(--soft);position:relative}
+.oc:active{opacity:.8}
+.oc-img{width:100%;aspect-ratio:3/2;object-fit:cover;display:block}
+.oc-ph{width:100%;aspect-ratio:3/2;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--bg3),#200050)}
+.oc-ph .l{font-size:18px;font-weight:900;opacity:.4;color:#fff}
+.oc-badge{position:absolute;top:3px;left:3px;font-size:7px;font-weight:800;padding:2px 4px;border-radius:3px;background:rgba(168,85,247,.9);color:#fff}
+.oc-name{font-size:9px;font-weight:700;padding:4px 6px 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* PLAT TAGS */
+.ptag{display:inline-flex;align-items:center;font-size:8px;padding:1px 5px;border-radius:3px;font-weight:700;margin:0 2px}
+.ptag.pc{background:rgba(59,130,246,.15);color:#60a5fa}
+.ptag.mobile{background:rgba(34,197,94,.15);color:#4ade80}
+.ptag.console{background:rgba(249,115,22,.15);color:#fb923c}
+/* DETAIL SHEET */
+#det{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.77);backdrop-filter:blur(18px);display:none;align-items:flex-end;justify-content:center}
+#det.open{display:flex}
+#dbox{width:min(100%,520px);height:88vh;background:var(--bg2);border:1px solid rgba(255,255,255,.08);border-radius:18px 18px 0 0;overflow-y:auto;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;padding-bottom:calc(20px + var(--sb))}
+#dbox::-webkit-scrollbar{display:none}
+.d-handle{width:32px;height:3px;border-radius:99px;background:rgba(255,255,255,.12);margin:10px auto 4px}
+.d-banner{width:100%;height:155px;object-fit:cover;display:block;background:var(--bg3)}
+.d-banner-ph{width:100%;height:155px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--bg3),#200060)}
+.d-banner-ph .l{font-size:64px;font-weight:900;opacity:.3;color:#fff}
+.d-top{display:flex;gap:12px;padding:14px 14px 10px;margin-top:-22px;position:relative;align-items:flex-end}
+.d-ico{width:66px;height:66px;border-radius:14px;overflow:hidden;border:2.5px solid var(--bg2);flex-shrink:0;background:var(--soft);box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.d-ico img{width:100%;height:100%;object-fit:cover;display:block}
+.d-ico-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--soft),#200050)}
+.d-ico-ph .l{font-size:24px;font-weight:900;opacity:.5;color:#fff}
+.d-titles{flex:1;min-width:0;padding-bottom:2px}
+.d-name{font-size:15px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.d-dev{font-size:10.5px;color:var(--muted);margin-top:2px}
+.d-stats{display:flex;border-bottom:1px solid var(--border);padding:0 14px 12px}
+.d-stat{flex:1;text-align:center;padding:6px 0}
+.d-stat+.d-stat{border-left:1px solid var(--border)}
+.d-sv{font-size:13px;font-weight:800}
+.d-sl{font-size:8.5px;color:var(--muted);margin-top:1px}
+.d-btns{display:flex;gap:7px;padding:11px 14px;border-bottom:1px solid var(--border)}
+.d-btn{flex:1;height:40px;border-radius:10px;border:none;font-size:12.5px;font-weight:800;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
+.d-btn:active{opacity:.8}
+.d-btn.pri{background:linear-gradient(135deg,var(--pk),var(--ac));color:#fff;box-shadow:0 4px 16px rgba(168,85,247,.3)}
+.d-btn.sec{background:var(--glass);border:1px solid var(--border);color:var(--text)}
+.d-dh{padding:11px 14px 4px;font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.07em;text-transform:uppercase}
+.d-desc{padding:0 14px 16px;font-size:12.5px;color:rgba(255,255,255,.65);line-height:1.7;white-space:pre-wrap;word-break:break-word}
+.d-plats{display:flex;flex-wrap:wrap;gap:5px;padding:0 14px 14px}
+/* SEARCH */
+#srch-sec{display:none;padding:0 12px}
+.no-res{text-align:center;padding:40px;color:var(--muted);font-size:13px}
+/* TOASTS */
+#tst{position:fixed;bottom:calc(78px + var(--sb));left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;align-items:center;gap:5px;pointer-events:none;width:max-content;max-width:90vw}
+.te{background:rgba(6,0,14,.97);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:8px 14px;font-size:12px;color:#fff;opacity:0;transform:translateY(5px);transition:all .17s}
+.te.s{opacity:1;transform:none}
+::-webkit-scrollbar{width:2px;height:2px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07)}
+</style>
+</head>
+<body>
+<div id="hdr">
+  <div class="h-brand" id="hBrand" style="cursor:pointer">
+    <img src="https://i.imgur.com/lALmGx6.png" onerror="this.style.display='none'" alt="TFV" id="hLogoImg"/>
+    <span class="h-brand-t">TFGames</span>
+  </div>
+  <div id="hProfileWrap" style="display:flex;align-items:center;flex-shrink:0;cursor:pointer;position:relative;width:34px;height:34px" onclick="showProfileOrLogin()">
+    <div style="width:34px;height:34px;border-radius:50%;overflow:hidden;border:1.5px solid rgba(168,85,247,.4);background:rgba(109,36,217,.2);display:grid;place-items:center">
+      <img id="hProfileImg" src="" style="width:34px;height:34px;object-fit:cover;display:none"/>
+      <svg id="hProfileSvg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(168,85,247,.7)" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+    </div>
+    <div id="hOnlineDot" style="width:10px;height:10px;border-radius:50%;background:#4ade80;border:2px solid #02000a;box-shadow:0 0 7px rgba(74,222,128,.9);position:absolute;bottom:0;right:0;display:none"></div>
+  </div>
+  <div class="h-srch">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+    <input id="sIn" type="search" placeholder="Buscar juego..." autocomplete="off"/>
+    <button id="sCl"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+  </div>
+</div>
+<div id="tabs"></div>
+<div id="page">
+  <div id="hero"><div class="h-track" id="hTrack"></div><div class="h-dots" id="hDots"></div></div>
+  <div id="srch-sec"></div>
+  <div id="cnt"></div>
+</div>
+<div id="det"><div id="dbox"><div class="d-handle"></div><div id="dcnt"></div></div></div>
+<div id="tst"></div>
+<script>
+var GAMES = [
+  {id:'gtav',name:'GTA V',dev:'Rockstar Games',cat:'Acción',plat:['pc'],rating:4.7,year:2013,desc:'Mundo abierto masivo en Los Santos. Historia de tres protagonistas, modo online con millones de jugadores. El juego más vendido de la historia.',img:'https://cdn.akamai.steamstatic.com/steam/apps/271590/header.jpg',steam:'https://store.steampowered.com/app/271590/',apk:'https://store.steampowered.com/app/271590/',play:null},
+  {id:'cs2',name:'Counter-Strike 2',dev:'Valve',cat:'Disparos',plat:['pc'],rating:4.3,year:2023,desc:'El FPS táctico competitivo definitivo. Nuevo motor Source 2, humo volumétrico y gráficos renovados. Gratis para jugar.',img:'https://cdn.akamai.steamstatic.com/steam/apps/730/header.jpg',steam:'https://store.steampowered.com/app/730/',apk:'https://store.steampowered.com/app/730/',play:null},
+  {id:'dota2',name:'Dota 2',dev:'Valve',cat:'MOBA',plat:['pc'],rating:4.5,year:2013,desc:'MOBA de 5v5 con más de 120 héroes. El torneo Internacional reparte millones de dólares. Completamente gratis.',img:'https://cdn.akamai.steamstatic.com/steam/apps/570/header.jpg',steam:'https://store.steampowered.com/app/570/',apk:'https://store.steampowered.com/app/570/',play:null},
+  {id:'eldenring',name:'Elden Ring',dev:'FromSoftware',cat:'RPG',plat:['pc','console'],rating:4.9,year:2022,desc:'RPG de mundo abierto escrito por George R.R. Martin. Desafiante y épico. GOTY 2022.',img:'https://cdn.akamai.steamstatic.com/steam/apps/1245620/header.jpg',steam:'https://store.steampowered.com/app/1245620/',apk:'https://store.steampowered.com/app/1245620/',play:null},
+  {id:'cyberpunk',name:'Cyberpunk 2077',dev:'CD Projekt Red',cat:'RPG',plat:['pc','console'],rating:4.7,year:2020,desc:'RPG de mundo abierto futurista en Night City. Historia de V y el chip de Johnny Silverhand.',img:'https://cdn.akamai.steamstatic.com/steam/apps/1091500/header.jpg',steam:'https://store.steampowered.com/app/1091500/',apk:'https://store.steampowered.com/app/1091500/',play:null},
+  {id:'witcher3',name:'The Witcher 3',dev:'CD Projekt Red',cat:'RPG',plat:['pc','console'],rating:4.9,year:2015,desc:'El mejor RPG de mundo abierto jamás hecho. Geralt de Rivia, la caza de la Ley del Sorpresa. Más de 100 horas de contenido.',img:'https://cdn.akamai.steamstatic.com/steam/apps/292030/header.jpg',steam:'https://store.steampowered.com/app/292030/',apk:'https://store.steampowered.com/app/292030/',play:null},
+  {id:'rdr2',name:'Red Dead Redemption 2',dev:'Rockstar Games',cat:'Acción',plat:['pc','console'],rating:4.9,year:2018,desc:'Western de mundo abierto en el ocaso del Viejo Oeste. Arthur Morgan y la pandilla Van der Linde.',img:'https://cdn.akamai.steamstatic.com/steam/apps/1174180/header.jpg',steam:'https://store.steampowered.com/app/1174180/',apk:'https://store.steampowered.com/app/1174180/',play:null},
+  {id:'godofwar',name:'God of War',dev:'Santa Monica Studio',cat:'Acción',plat:['pc','console'],rating:4.9,year:2018,desc:'Kratos y su hijo Atreus en la mitología nórdica. Combate brutal y narrativa emocional. GOTY 2018.',img:'https://cdn.akamai.steamstatic.com/steam/apps/1593500/header.jpg',steam:'https://store.steampowered.com/app/1593500/',apk:'https://store.steampowered.com/app/1593500/',play:null},
+  {id:'horizon',name:'Horizon Zero Dawn',dev:'Guerrilla Games',cat:'Aventura',plat:['pc','console'],rating:4.7,year:2017,desc:'Mundo post-apocalíptico habitado por máquinas-dinosaurio. Aloy, cazadora y exploradora.',img:'https://cdn.akamai.steamstatic.com/steam/apps/1151640/header.jpg',steam:'https://store.steampowered.com/app/1151640/',apk:'https://store.steampowered.com/app/1151640/',play:null},
+  {id:'sekiro',name:'Sekiro: Shadows Die Twice',dev:'FromSoftware',cat:'Acción',plat:['pc','console'],rating:4.8,year:2019,desc:'Ninja samurai en el Japón feudal. Combate de postura y desvíos precisos. GOTY 2019.',img:'https://cdn.akamai.steamstatic.com/steam/apps/814380/header.jpg',steam:'https://store.steampowered.com/app/814380/',apk:'https://store.steampowered.com/app/814380/',play:null},
+  {id:'hades',name:'Hades',dev:'Supergiant Games',cat:'Roguelike',plat:['pc','console'],rating:4.9,year:2020,desc:'Roguelike del hijo de Hades escapando del inframundo. Historia que avanza con cada muerte.',img:'https://cdn.akamai.steamstatic.com/steam/apps/1145360/header.jpg',steam:'https://store.steampowered.com/app/1145360/',apk:'https://store.steampowered.com/app/1145360/',play:null},
+  {id:'celeste',name:'Celeste',dev:'Maddy Thorson',cat:'Plataforma',plat:['pc','console'],rating:4.9,year:2018,desc:'Plataformero sobre escalar una montaña y superar la ansiedad. Dificultad justa y narrativa poderosa.',img:'https://cdn.akamai.steamstatic.com/steam/apps/504230/header.jpg',steam:'https://store.steampowered.com/app/504230/',apk:'https://store.steampowered.com/app/504230/',play:null},
+  {id:'hollowknight',name:'Hollow Knight',dev:'Team Cherry',cat:'Metroidvania',plat:['pc','console'],rating:4.9,year:2017,desc:'Exploración subterránea en el reino de los insectos. Arte hecho a mano, 40+ horas de contenido.',img:'https://cdn.akamai.steamstatic.com/steam/apps/367520/header.jpg',steam:'https://store.steampowered.com/app/367520/',apk:'https://store.steampowered.com/app/367520/',play:null},
+  {id:'stardew',name:'Stardew Valley',dev:'Eric Barone',cat:'Simulación',plat:['pc','mobile'],rating:4.9,year:2016,desc:'Granja pixelada con misterios, relaciones y exploración. El indie más querido de la última década.',img:'https://cdn.akamai.steamstatic.com/steam/apps/413150/header.jpg',steam:'https://store.steampowered.com/app/413150/',apk:'https://store.steampowered.com/app/413150/',play:'https://play.google.com/store/apps/details?id=com.chucklefish.stardewvalley'},
+  {id:'terraria',name:'Terraria',dev:'Re-Logic',cat:'Sandbox',plat:['pc','mobile'],rating:4.9,year:2011,desc:'Sandbox 2D con exploración, construcción y combate. Más de 20 jefes finales, miles de objetos.',img:'https://cdn.akamai.steamstatic.com/steam/apps/105600/header.jpg',steam:'https://store.steampowered.com/app/105600/',apk:'https://store.steampowered.com/app/105600/',play:'https://play.google.com/store/apps/details?id=com.and.games505.TerrariaPaid'},
+  {id:'rust',name:'Rust',dev:'Facepunch Studios',cat:'Supervivencia',plat:['pc'],rating:4.3,year:2013,desc:'Supervivencia multijugador sin cuartel. Construye, roba y domina en un mundo hostil.',img:'https://cdn.akamai.steamstatic.com/steam/apps/252490/header.jpg',steam:'https://store.steampowered.com/app/252490/',apk:'https://store.steampowered.com/app/252490/',play:null},
+  {id:'valheim',name:'Valheim',dev:'Iron Gate Studio',cat:'Supervivencia',plat:['pc'],rating:4.7,year:2021,desc:'Sobrevive en el purgatorio vikingo. Explora, construye y derrota jefes de la mitología nórdica.',img:'https://cdn.akamai.steamstatic.com/steam/apps/892970/header.jpg',steam:'https://store.steampowered.com/app/892970/',apk:'https://store.steampowered.com/app/892970/',play:null},
+  {id:'portal2',name:'Portal 2',dev:'Valve',cat:'Puzzle',plat:['pc','console'],rating:4.9,year:2011,desc:'Puzles de portales con una narrativa genial. El mejor juego cooperativo de la historia.',img:'https://cdn.akamai.steamstatic.com/steam/apps/620/header.jpg',steam:'https://store.steampowered.com/app/620/',apk:'https://store.steampowered.com/app/620/',play:null},
+  {id:'tf2',name:'Team Fortress 2',dev:'Valve',cat:'Disparos',plat:['pc'],rating:4.4,year:2007,desc:'FPS de clases icónico y gratuito. Espía, Heavy, Sniper... 9 clases únicas, humor absurdo.',img:'https://cdn.akamai.steamstatic.com/steam/apps/440/header.jpg',steam:'https://store.steampowered.com/app/440/',apk:'https://store.steampowered.com/app/440/',play:null},
+  {id:'apexlegends',name:'Apex Legends',dev:'Respawn',cat:'Battle Royale',plat:['pc','console'],rating:4.4,year:2019,desc:'Battle Royale de leyendas con habilidades únicas. Movimiento fluido y mecánicas de ping revolucionarias.',img:'https://cdn.akamai.steamstatic.com/steam/apps/1172470/header.jpg',steam:'https://store.steampowered.com/app/1172470/',apk:'https://store.steampowered.com/app/1172470/',play:null},
+  {id:'warframe',name:'Warframe',dev:'Digital Extremes',cat:'Acción',plat:['pc','console'],rating:4.5,year:2013,desc:'Ninjas espaciales gratis. RPG de acción cooperativa con miles de horas de contenido.',img:'https://cdn.akamai.steamstatic.com/steam/apps/230410/header.jpg',steam:'https://store.steampowered.com/app/230410/',apk:'https://store.steampowered.com/app/230410/',play:null},
+  {id:'amongus',name:'Among Us',dev:'InnerSloth',cat:'Social',plat:['pc','mobile'],rating:4.3,year:2018,desc:'Impostores y tripulantes en una nave espacial. Deduce, engaña y sobrevive.',img:'https://cdn.akamai.steamstatic.com/steam/apps/945360/header.jpg',steam:'https://store.steampowered.com/app/945360/',apk:'https://store.steampowered.com/app/945360/',play:'https://play.google.com/store/apps/details?id=com.innersloth.spacemafia'},
+  {id:'fallguys',name:'Fall Guys',dev:'Mediatonic',cat:'Battle Royale',plat:['pc','console'],rating:4.3,year:2020,desc:'Battle Royale caótico con judías. 60 jugadores, obstáculos absurdos, puro caos divertido.',img:'https://cdn.akamai.steamstatic.com/steam/apps/1097150/header.jpg',steam:'https://store.steampowered.com/app/1097150/',apk:'https://store.steampowered.com/app/1097150/',play:null},
+  {id:'rocketleague',name:'Rocket League',dev:'Psyonix',cat:'Deportes',plat:['pc','console'],rating:4.6,year:2015,desc:'Fútbol con coches cohete. Uno de los juegos más únicos y competitivos. Gratis.',img:'https://cdn.akamai.steamstatic.com/steam/apps/252950/header.jpg',steam:'https://store.steampowered.com/app/252950/',apk:'https://store.steampowered.com/app/252950/',play:null},
+  {id:'lethalcompany',name:'Lethal Company',dev:'Zeekerss',cat:'Horror',plat:['pc'],rating:4.8,year:2023,desc:'Recoge chatarra en lunas abandonadas para una empresa. Horror cooperativo absurdo.',img:'https://cdn.akamai.steamstatic.com/steam/apps/1966720/header.jpg',steam:'https://store.steampowered.com/app/1966720/',apk:'https://store.steampowered.com/app/1966720/',play:null},
+  {id:'palworld',name:'Palworld',dev:'Pocketpair',cat:'Aventura',plat:['pc','console'],rating:4.5,year:2024,desc:'Pokémon pero con armas. Captura criaturas, construye bases y survives en este mundo abierto.',img:'https://cdn.akamai.steamstatic.com/steam/apps/1623730/header.jpg',steam:'https://store.steampowered.com/app/1623730/',apk:'https://store.steampowered.com/app/1623730/',play:null},
+  {id:'phasmo',name:'Phasmophobia',dev:'Kinetic Games',cat:'Horror',plat:['pc'],rating:4.6,year:2020,desc:'Caza fantasmas con tu equipo. Identifica el tipo de fantasma y sobrevive. Escalofriante.',img:'https://cdn.akamai.steamstatic.com/steam/apps/739630/header.jpg',steam:'https://store.steampowered.com/app/739630/',apk:'https://store.steampowered.com/app/739630/',play:null},
+  {id:'dbd',name:'Dead by Daylight',dev:'Behaviour',cat:'Horror',plat:['pc','console','mobile'],rating:4.1,year:2016,desc:'4 supervivientes vs 1 asesino. Horror asimétrico con personajes de películas icónicas.',img:'https://cdn.akamai.steamstatic.com/steam/apps/381210/header.jpg',steam:'https://store.steampowered.com/app/381210/',apk:'https://store.steampowered.com/app/381210/',play:'https://play.google.com/store/apps/details?id=com.bhvr.deadbydaylight'},
+  {id:'subnautica',name:'Subnautica',dev:'Unknown Worlds',cat:'Supervivencia',plat:['pc','console'],rating:4.8,year:2018,desc:'Supervivencia submarina en un planeta océano alienígena. Exploración vertical y base-building.',img:'https://cdn.akamai.steamstatic.com/steam/apps/264710/header.jpg',steam:'https://store.steampowered.com/app/264710/',apk:'https://store.steampowered.com/app/264710/',play:null},
+  {id:'factorio',name:'Factorio',dev:'Wube Software',cat:'Estrategia',plat:['pc'],rating:4.9,year:2020,desc:'Construye y automatiza fábricas en un planeta alienígena. El juego más optimizado de la historia.',img:'https://cdn.akamai.steamstatic.com/steam/apps/427520/header.jpg',steam:'https://store.steampowered.com/app/427520/',apk:'https://store.steampowered.com/app/427520/',play:null},
+  {id:'satisfactory',name:'Satisfactory',dev:'Coffee Stain',cat:'Estrategia',plat:['pc'],rating:4.7,year:2020,desc:'Factorio en primera persona. Construye enormes fábricas en un planeta hermoso.',img:'https://cdn.akamai.steamstatic.com/steam/apps/526870/header.jpg',steam:'https://store.steampowered.com/app/526870/',apk:'https://store.steampowered.com/app/526870/',play:null},
+  {id:'poe',name:'Path of Exile',dev:'Grinding Gear',cat:'RPG',plat:['pc','console'],rating:4.5,year:2013,desc:'ARPG oscuro y profundo. Sistema de habilidades con árbol de 1300+ nodos. Completamente gratis.',img:'https://cdn.akamai.steamstatic.com/steam/apps/238960/header.jpg',steam:'https://store.steampowered.com/app/238960/',apk:'https://store.steampowered.com/app/238960/',play:null},
+  {id:'soT',name:'Sea of Thieves',dev:'Rare',cat:'Aventura',plat:['pc','console'],rating:4.3,year:2018,desc:'Pirata cooperativo en mundo abierto. Navega, pelea y saquea con tu tripulación.',img:'https://cdn.akamai.steamstatic.com/steam/apps/1172620/header.jpg',steam:'https://store.steampowered.com/app/1172620/',apk:'https://store.steampowered.com/app/1172620/',play:null},
+  {id:'darksouls3',name:'Dark Souls 3',dev:'FromSoftware',cat:'RPG',plat:['pc','console'],rating:4.8,year:2016,desc:'RPG de acción desafiante en el ocaso de los tiempos de fuego. Maestría del combate y la paciencia.',img:'https://cdn.akamai.steamstatic.com/steam/apps/374320/header.jpg',steam:'https://store.steampowered.com/app/374320/',apk:'https://store.steampowered.com/app/374320/',play:null},
+  {id:'itakestwo',name:'It Takes Two',dev:'Hazelight',cat:'Cooperativo',plat:['pc','console'],rating:4.9,year:2021,desc:'El mejor juego cooperativo en parejas. Historia de una pareja en crisis. GOTY 2021.',img:'https://cdn.akamai.steamstatic.com/steam/apps/1426210/header.jpg',steam:'https://store.steampowered.com/app/1426210/',apk:'https://store.steampowered.com/app/1426210/',play:null},
+  {id:'roblox',name:'Roblox',dev:'Roblox Corp.',cat:'Sandbox',plat:['pc','mobile'],rating:4.3,year:2006,desc:'Plataforma de millones de mundos creados por usuarios. Juega cualquier tipo de juego imaginable.',img:'https://cdn.akamai.steamstatic.com/steam/apps/1083370/header.jpg',steam:'https://store.steampowered.com/app/1083370/',apk:'https://store.steampowered.com/app/1083370/',play:'https://play.google.com/store/apps/details?id=com.roblox.client'},
+  {id:'genshin',name:'Genshin Impact',dev:'HoYoverse',cat:'RPG',plat:['pc','mobile','console'],rating:4.5,year:2020,desc:'RPG de mundo abierto gratuito con personajes únicos y combate elemental. Actualizaciones cada 6 semanas.',img:'https://cdn.akamai.steamstatic.com/steam/apps/1971870/header.jpg',steam:'https://store.steampowered.com/app/1971870/',apk:'https://store.steampowered.com/app/1971870/',play:'https://play.google.com/store/apps/details?id=com.miHoYo.GenshinImpact'},
+  {id:'mcdungeons',name:'Minecraft Dungeons',dev:'Mojang',cat:'Aventura',plat:['pc','console','mobile'],rating:4.4,year:2020,desc:'Dungeon crawler en el universo Minecraft. Para todos los públicos, ideal en cooperativo.',img:'https://cdn.akamai.steamstatic.com/steam/apps/1672970/header.jpg',steam:'https://store.steampowered.com/app/1672970/',apk:'https://store.steampowered.com/app/1672970/',play:null},
+  {id:'fifa24',name:'EA Sports FC 24',dev:'EA Sports',cat:'Deportes',plat:['pc','console','mobile'],rating:4.0,year:2023,desc:'El simulador de fútbol más vendido del mundo. Ultimate Team, carrera y clubes pro.',img:'https://cdn.akamai.steamstatic.com/steam/apps/2195250/header.jpg',steam:'https://store.steampowered.com/app/2195250/',apk:'https://store.steampowered.com/app/2195250/',play:'https://play.google.com/store/apps/details?id=com.ea.gp.fifamobile'},
+  {id:'pubgm',name:'PUBG Mobile',dev:'Krafton',cat:'Battle Royale',plat:['mobile'],rating:4.2,year:2018,desc:'Battle Royale oficial en móvil. 100 jugadores, vehículos, armas reales. HD a 90fps.',img:null,steam:null,apk:'https://apkpure.com/pubg-mobile/com.tencent.ig',play:'https://play.google.com/store/apps/details?id=com.tencent.ig'},
+  {id:'freefire',name:'Free Fire',dev:'Garena',cat:'Battle Royale',plat:['mobile'],rating:4.1,year:2017,desc:'Battle Royale de 50 jugadores para móviles de todo rango. Partidas de 10 minutos.',img:null,steam:null,apk:'https://apkpure.com/garena-free-fire/com.dts.freefireth',play:'https://play.google.com/store/apps/details?id=com.dts.freefireth'},
+  {id:'codm',name:'Call of Duty Mobile',dev:'Activision',cat:'Disparos',plat:['mobile'],rating:4.4,year:2019,desc:'CoD completo en móvil. Multijugador 5v5, Battle Royale, mapas clásicos. El mejor FPS mobile.',img:null,steam:null,apk:'https://apkpure.com/call-of-duty-mobile/com.activision.callofdudy.shooter',play:'https://play.google.com/store/apps/details?id=com.activision.callofduty.shooter'},
+  {id:'brawlstars',name:'Brawl Stars',dev:'Supercell',cat:'Acción',plat:['mobile'],rating:4.4,year:2018,desc:'Arena de batalla 3v3 con 60+ brawlers únicos. Multijugador frenético de Supercell.',img:null,steam:null,apk:'https://apkpure.com/brawl-stars/com.supercell.brawlstars',play:'https://play.google.com/store/apps/details?id=com.supercell.brawlstars'},
+  {id:'coc',name:'Clash of Clans',dev:'Supercell',cat:'Estrategia',plat:['mobile'],rating:4.7,year:2012,desc:'El estrategia de referencia. Construye tu aldea, forma clanes, conquista bases enemigas.',img:null,steam:null,apk:'https://apkpure.com/clash-of-clans/com.supercell.clashofclans',play:'https://play.google.com/store/apps/details?id=com.supercell.clashofclans'},
+  {id:'cr',name:'Clash Royale',dev:'Supercell',cat:'Estrategia',plat:['mobile'],rating:4.5,year:2016,desc:'Batallas de cartas en tiempo real. Construye tu mazo y derrota la torre enemiga.',img:null,steam:null,apk:'https://apkpure.com/clash-royale/com.supercell.clashroyale',play:'https://play.google.com/store/apps/details?id=com.supercell.clashroyale'},
+  {id:'ml',name:'Mobile Legends',dev:'Moonton',cat:'MOBA',plat:['mobile'],rating:4.3,year:2016,desc:'MOBA 5v5 para móvil. 100+ héroes únicos, torneos globales, partidas de 10 minutos.',img:null,steam:null,apk:'https://apkpure.com/mobile-legends-bang-bang/com.mobile.legends',play:'https://play.google.com/store/apps/details?id=com.mobile.legends'},
+  {id:'honkai',name:'Honkai: Star Rail',dev:'HoYoverse',cat:'RPG',plat:['pc','mobile'],rating:4.6,year:2023,desc:'RPG por turnos en el cosmos. Narrativa cinematográfica, personajes únicos de HoYoverse.',img:null,steam:null,apk:'https://apkpure.com/honkai-star-rail/com.HoYoverse.hkrpgoversea',play:'https://play.google.com/store/apps/details?id=com.HoYoverse.hkrpgoversea'},
+  {id:'asph9',name:'Asphalt 9: Legends',dev:'Gameloft',cat:'Carreras',plat:['mobile','pc'],rating:4.5,year:2018,desc:'El juego de carreras más bello para móvil. 100+ coches reales, gráficos console-quality.',img:null,steam:null,apk:'https://apkpure.com/asphalt-9-legends/com.gameloft.android.ANMP.GloftA9HM',play:'https://play.google.com/store/apps/details?id=com.gameloft.android.ANMP.GloftA9HM'},
+  {id:'gd',name:'Geometry Dash',dev:'RobTop',cat:'Plataforma',plat:['mobile','pc'],rating:4.6,year:2013,desc:'Plataformero de ritmo con miles de niveles. Dificultad legendaria, comunidad activa.',img:'https://cdn.akamai.steamstatic.com/steam/apps/322170/header.jpg',steam:'https://store.steampowered.com/app/322170/',apk:'https://apkpure.com/geometry-dash/com.robtopx.geometryjump',play:'https://play.google.com/store/apps/details?id=com.robtopx.geometryjump'},
+  {id:'subway',name:'Subway Surfers',dev:'Kiloo',cat:'Casual',plat:['mobile'],rating:4.5,year:2012,desc:'El endless runner más descargado. Ciudades del mundo, personajes únicos.',img:null,steam:null,apk:'https://apkpure.com/subway-surfers/com.kiloo.subwaysurf',play:'https://play.google.com/store/apps/details?id=com.kiloo.subwaysurf'},
+  {id:'pogo',name:'Pokémon GO',dev:'Niantic',cat:'Aventura',plat:['mobile'],rating:4.1,year:2016,desc:'Atrapa Pokémon en el mundo real. Gimnasios, incursiones, eventos globales.',img:null,steam:null,apk:'https://apkpure.com/pok-mon-go/com.nianticlabs.pokemongo',play:'https://play.google.com/store/apps/details?id=com.nianticlabs.pokemongo'}
+];
+
+var OFFLINE=[
+  {id:'flip',name:'Flip The Knife',go:'flip',img:'https://www.appcreator24.com/android-app-creator/game/promo1/media/graphics/promo/banners/180x120.jpg'},
+  {id:'flipjump',name:'Flip Jump',go:'Flipjump',img:'https://www.appcreator24.com/android-app-creator/game/promo8/media/graphics/promo/banners/180x120.jpg'},
+  {id:'driftboss',name:'Drift Boss',go:'Driftboss',img:'https://www.appcreator24.com/android-app-creator/game/promo23/media/graphics/promo/banners/180x120.jpg'},
+  {id:'bottle',name:'Flip Bottle',go:'Bottleflip',img:'https://www.appcreator24.com/android-app-creator/game/promo15/media/graphics/promo/banners/180x120.jpg'},
+  {id:'hopstar',name:'Hop Star',go:'Hopstars',img:'https://www.appcreator24.com/android-app-creator/game/promo38/media/graphics/promo/banners/180x120.jpg'},
+  {id:'spiral',name:'Spiral Stairs',go:'SpiralStai',img:'https://www.appcreator24.com/android-app-creator/game/promo45/media/graphics/promo/banners/180x120.jpg'},
+  {id:'ttt',name:'Tic Tac Toe',go:'TicTicToe',img:'https://www.appcreator24.com/android-app-creator/game/promo50/media/graphics/promo/banners/180x120.jpg'},
+  {id:'jumpsplat',name:'Jump & Splat',go:'Jumpsplat',img:'https://www.appcreator24.com/android-app-creator/game/promo53/media/graphics/promo/banners/180x120.jpg'},
+  {id:'flowstate',name:'Flow State',go:'Flowstate',img:'https://www.appcreator24.com/android-app-creator/game/promo54/media/graphics/promo/banners/180x120.jpg'},
+  {id:'hardest',name:'Hardest Game',go:'Hardest',img:'https://www.appcreator24.com/android-app-creator/game/promo154/media/graphics/promo/banners/180x120.jpg'},
+  {id:'pipemaster',name:'Pipe Master',go:'PipeMaster',img:'https://www.appcreator24.com/android-app-creator/game/promo151/media/graphics/promo/banners/180x120.jpg'}
+];
+
+var CATS=['Todo','PC','Móvil','Acción','RPG','Disparos','Estrategia','Aventura','Sin Conexión'];
+var state={tab:'Todo',hero:0,timer:null};
+
+function toast(msg,ms){var el=document.createElement('div');el.className='te';el.textContent=msg;document.getElementById('tst').appendChild(el);requestAnimationFrame(function(){requestAnimationFrame(function(){el.classList.add('s');});});setTimeout(function(){el.classList.remove('s');setTimeout(function(){el.remove();},200);},ms||1800);}
+function initials(n){var w=(n||'').trim().split(/\s+/);return w.length>1?w[0][0]+w[1][0]:(w[0]||'?').slice(0,2).toUpperCase();}
+function ratingColor(r){var n=parseFloat(r);return n>=4.5?'#4ade80':n>=3.5?'#fbbf24':'#f87171';}
+function starsStr(r){var n=Math.round(parseFloat(r||0));var s='';for(var i=0;i<5;i++)s+=i<n?'★':'☆';return s;}
+
+function mkCover(g,cls,phCls){
+  if(g.img){var img=document.createElement('img');img.className=cls;img.loading='lazy';img.alt='';img.src=g.img;img.onerror=function(){var ph=document.createElement('div');ph.className=phCls;var l=document.createElement('span');l.className='l';l.textContent=initials(g.name);ph.appendChild(l);if(img.parentNode)img.parentNode.replaceChild(ph,img);};return img;}
+  var ph=document.createElement('div');ph.className=phCls;var l=document.createElement('span');l.className='l';l.textContent=initials(g.name);ph.appendChild(l);return ph;
+}
+
+function getLink(g){
+  if(g.plat.includes('mobile')&&g.play)return g.play;
+  if(g.plat.includes('mobile')&&g.apk)return g.apk;
+  if(g.steam)return g.steam;
+  if(g.apk)return g.apk;
+  return 'https://apkpure.com/search?q='+encodeURIComponent(g.name);
+}
+function doDownload(g){window.open(getLink(g),'_blank','noopener');toast('Abriendo…');}
+
+/* ── HERO ── */
+function buildHero(games){
+  var items=games.slice(0,6);var track=document.getElementById('hTrack');var dots=document.getElementById('hDots');
+  if(!track)return;track.innerHTML='';dots.innerHTML='';
+  items.forEach(function(g,i){
+    var slide=document.createElement('div');slide.className='h-slide';
+    var card=document.createElement('div');card.className='h-card';
+    var coverEl=mkCover(g,'h-img','h-img-ph');card.appendChild(coverEl);
+    var grad=document.createElement('div');grad.className='h-grad';card.appendChild(grad);
+    var acts=document.createElement('div');acts.className='h-actions';
+    var gb=document.createElement('button');gb.className='h-get';gb.textContent='Obtener';
+    gb.onclick=function(e){e.stopPropagation();doDownload(g);};acts.appendChild(gb);card.appendChild(acts);
+    var info=document.createElement('div');info.className='h-info';
+    var gen=document.createElement('div');gen.className='h-gen';gen.textContent=g.cat;
+    var tn=document.createElement('div');tn.className='h-title';tn.textContent=g.name;
+    var meta=document.createElement('div');meta.className='h-meta';meta.textContent=g.dev+' · ⭐ '+g.rating+' · '+g.year;
+    info.appendChild(gen);info.appendChild(tn);info.appendChild(meta);card.appendChild(info);
+    card.onclick=function(){openDetail(g);};
+    slide.appendChild(card);track.appendChild(slide);
+    var dot=document.createElement('div');dot.className='dot'+(i===0?' on':'');dot.onclick=function(){goHero(i);};dots.appendChild(dot);
+  });
+  if(state.timer)clearInterval(state.timer);
+  state.timer=setInterval(function(){goHero((state.hero+1)%items.length);},5000);
+}
+function goHero(i){state.hero=i;var t=document.getElementById('hTrack');if(t)t.style.transform='translateX(-'+(i*100)+'%)';document.querySelectorAll('.dot').forEach(function(d,j){d.classList.toggle('on',j===i);});}
+
+/* ── TABS ── */
+function buildTabs(){var el=document.getElementById('tabs');el.innerHTML='';CATS.forEach(function(c){var btn=document.createElement('button');btn.className='chip'+(c===state.tab?' on':'');btn.textContent=c;btn.onclick=function(){state.tab=c;document.getElementById('sIn').value='';document.getElementById('sCl').style.display='none';document.getElementById('srch-sec').style.display='none';document.getElementById('cnt').style.display='';document.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on');});btn.classList.add('on');render();};el.appendChild(btn);});}
+
+/* ── FILTER ── */
+function filterGames(q){
+  if(!q)return GAMES;
+  q=q.toLowerCase();
+  return GAMES.filter(function(g){return g.name.toLowerCase().includes(q)||g.cat.toLowerCase().includes(q)||g.dev.toLowerCase().includes(q);});
+}
+function tabGames(){
+  if(state.tab==='Todo')return GAMES;
+  if(state.tab==='PC')return GAMES.filter(function(g){return g.plat.includes('pc');});
+  if(state.tab==='Móvil')return GAMES.filter(function(g){return g.plat.includes('mobile');});
+  var catMap={Acción:'Acción',RPG:'RPG',Disparos:'Disparos',Estrategia:'Estrategia',Aventura:'Aventura'};
+  return GAMES.filter(function(g){return g.cat===catMap[state.tab]||(g.cat&&g.cat.includes(catMap[state.tab]));});
+}
+
+/* ── RENDER ── */
+function render(){
+  var cnt=document.getElementById('cnt');cnt.innerHTML='';
+  if(state.tab==='Sin Conexión'){renderOffline(cnt);return;}
+  var games=tabGames();
+  // HERO
+  buildHero(games.slice(0,6));
+  // Horizontal row — top rated
+  renderHRow(cnt,'Más populares',games.slice(0,10));
+  // Big grid
+  renderBigGrid(cnt,'Destacados',games.slice(10,14));
+  // Full list with numbering
+  renderList(cnt,'Todos ('+games.length+')',games,true);
+  // Offline at bottom for Todo tab
+  if(state.tab==='Todo'){
+    var oSec=document.createElement('div');oSec.style.marginBottom='20px';
+    var oh=document.createElement('div');oh.style.cssText='font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;padding:0 12px;margin-bottom:8px';oh.textContent='Sin Conexión — Jugar en TFApp';
+    oSec.appendChild(oh);renderOffline(oSec);cnt.appendChild(oSec);
+  }
+}
+
+function renderHRow(parent,title,games){
+  if(!games.length)return;
+  var sec=document.createElement('div');sec.className='sec';
+  var hdr=document.createElement('div');hdr.className='s-hdr';
+  var t=document.createElement('span');t.className='s-ttl';t.textContent=title;hdr.appendChild(t);sec.appendChild(hdr);
+  var row=document.createElement('div');row.className='hrow';
+  games.forEach(function(g){
+    var card=document.createElement('div');card.className='hc';
+    var wrap=document.createElement('div');wrap.className='hc-img-wrap';
+    if(g.img){var img=document.createElement('img');img.src=g.img;img.loading='lazy';img.style.cssText='width:100%;height:100%;object-fit:cover;display:block';img.onerror=function(){wrap.removeChild(img);var ph=document.createElement('div');ph.className='hc-ph';var l=document.createElement('span');l.className='l';l.textContent=initials(g.name);ph.appendChild(l);wrap.appendChild(ph);};wrap.appendChild(img);}
+    else{var ph=document.createElement('div');ph.className='hc-ph';var l=document.createElement('span');l.className='l';l.textContent=initials(g.name);ph.appendChild(l);wrap.appendChild(ph);}
+    var rb=document.createElement('div');rb.className='hc-rat';rb.style.color=ratingColor(g.rating);rb.textContent='★ '+g.rating;wrap.appendChild(rb);
+    var nm=document.createElement('div');nm.className='hc-name';nm.textContent=g.name;
+    var sub=document.createElement('div');sub.className='hc-sub';sub.textContent=g.cat;
+    card.appendChild(wrap);card.appendChild(nm);card.appendChild(sub);
+    card.onclick=function(){openDetail(g);};row.appendChild(card);
+  });
+  sec.appendChild(row);parent.appendChild(sec);
+}
+
+function renderBigGrid(parent,title,games){
+  if(!games.length)return;
+  var sec=document.createElement('div');sec.className='sec';
+  var hdr=document.createElement('div');hdr.className='s-hdr';
+  var t=document.createElement('span');t.className='s-ttl';t.textContent=title;hdr.appendChild(t);sec.appendChild(hdr);
+  var grid=document.createElement('div');grid.className='bgrid';
+  games.forEach(function(g){
+    var card=document.createElement('div');card.className='bgc';
+    if(g.img){var img=document.createElement('img');img.className='bgc-img';img.src=g.img;img.loading='lazy';img.onerror=function(){var ph=document.createElement('div');ph.className='bgc-ph';var l=document.createElement('span');l.className='l';l.textContent=initials(g.name);ph.appendChild(l);card.insertBefore(ph,card.firstChild);};card.appendChild(img);}
+    else{var ph=document.createElement('div');ph.className='bgc-ph';var l=document.createElement('span');l.className='l';l.textContent=initials(g.name);ph.appendChild(l);card.appendChild(ph);}
+    var body=document.createElement('div');body.className='bgc-body';
+    var nm=document.createElement('div');nm.className='bgc-name';nm.textContent=g.name;
+    var meta=document.createElement('div');meta.className='bgc-meta';
+    var r=document.createElement('span');r.className='bgc-rat';r.style.color=ratingColor(g.rating);r.textContent='★ '+g.rating;
+    var c=document.createElement('span');c.className='bgc-cat';c.textContent=g.cat;
+    meta.appendChild(r);meta.appendChild(c);body.appendChild(nm);body.appendChild(meta);card.appendChild(body);
+    card.onclick=function(){openDetail(g);};grid.appendChild(card);
+  });
+  sec.appendChild(grid);parent.appendChild(sec);
+}
+
+function renderList(parent,title,games,numbered){
+  if(!games.length)return;
+  var sec=document.createElement('div');sec.className='sec';
+  var hdr=document.createElement('div');hdr.className='s-hdr';
+  var t=document.createElement('span');t.className='s-ttl';t.textContent=title;hdr.appendChild(t);sec.appendChild(hdr);
+  var list=document.createElement('div');list.className='glist';
+  games.forEach(function(g,i){
+    var item=document.createElement('div');item.className='gli';
+    if(numbered){var n=document.createElement('div');n.className='gli-n';n.textContent=i+1;item.appendChild(n);}
+    var cover=document.createElement('div');cover.className='gli-cover';
+    if(g.img){var img=document.createElement('img');img.src=g.img;img.loading='lazy';img.style.cssText='width:100%;height:100%;object-fit:cover;display:block';img.onerror=function(){cover.innerHTML='';var ph=document.createElement('div');ph.className='gli-ph';var l=document.createElement('span');l.className='l';l.textContent=initials(g.name);ph.appendChild(l);cover.appendChild(ph);};cover.appendChild(img);}
+    else{var ph=document.createElement('div');ph.className='gli-ph';var l=document.createElement('span');l.className='l';l.textContent=initials(g.name);ph.appendChild(l);cover.appendChild(ph);}
+    var info=document.createElement('div');info.className='gli-info';
+    var nm=document.createElement('div');nm.className='gli-name';nm.textContent=g.name;
+    var dev=document.createElement('div');dev.className='gli-dev';dev.textContent=g.dev+' · '+g.cat;
+    var stars=document.createElement('div');stars.className='gli-stars';stars.style.color=ratingColor(g.rating);stars.textContent=starsStr(g.rating)+' '+g.rating+' · '+g.year;
+    info.appendChild(nm);info.appendChild(dev);info.appendChild(stars);
+    var btn=document.createElement('button');btn.className='gli-btn';btn.textContent='Obtener';btn.onclick=function(e){e.stopPropagation();doDownload(g);};
+    item.appendChild(cover);item.appendChild(info);item.appendChild(btn);
+    item.onclick=function(){openDetail(g);};list.appendChild(item);
+  });
+  sec.appendChild(list);parent.appendChild(sec);
+}
+
+function renderOffline(parent){
+  var grid=document.createElement('div');grid.className='ogrid';
+  OFFLINE.forEach(function(g){
+    var card=document.createElement('div');card.className='oc';
+    if(g.img){var img=document.createElement('img');img.className='oc-img';img.src=g.img;img.loading='lazy';img.onerror=function(){var ph=document.createElement('div');ph.className='oc-ph';var l=document.createElement('span');l.className='l';l.textContent=initials(g.name);ph.appendChild(l);card.insertBefore(ph,card.firstChild);};card.appendChild(img);}
+    else{var ph=document.createElement('div');ph.className='oc-ph';var l=document.createElement('span');l.className='l';l.textContent=initials(g.name);ph.appendChild(l);card.appendChild(ph);}
+    var badge=document.createElement('div');badge.className='oc-badge';badge.textContent='TFApp';
+    var nm=document.createElement('div');nm.className='oc-name';nm.textContent=g.name;
+    card.appendChild(badge);card.appendChild(nm);
+    card.onclick=function(){window.location.href='go:'+g.go;};
+    grid.appendChild(card);
+  });
+  parent.appendChild(grid);
+}
+
+/* ── DETAIL ── */
+function openDetail(g){
+  var box=document.getElementById('dcnt');box.innerHTML='';
+  document.getElementById('det').classList.add('open');
+  document.getElementById('dbox').scrollTop=0;
+  /* Banner + admin pencil overlay */
+  var bannerWrap=document.createElement('div');bannerWrap.style.cssText='position:relative';
+  if(g.img){var img=document.createElement('img');img.className='d-banner';img.src=g.img;img.onerror=function(){bannerWrap.innerHTML='';var ph=document.createElement('div');ph.className='d-banner-ph';var l=document.createElement('span');l.className='l';l.textContent=initials(g.name);ph.appendChild(l);bannerWrap.appendChild(ph);};bannerWrap.appendChild(img);}
+  else{var bph=document.createElement('div');bph.className='d-banner-ph';var bl=document.createElement('span');bl.className='l';bl.textContent=initials(g.name);bph.appendChild(bl);bannerWrap.appendChild(bph);}
+  /* Admin edit pencil */
+  if(_isAdmin){
+    var pencilBtn=document.createElement('button');
+    pencilBtn.style.cssText='position:absolute;top:10px;right:10px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);border:1.5px solid rgba(168,85,247,.6);display:grid;place-items:center;cursor:pointer;z-index:10';
+    pencilBtn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2.2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>';
+    var _g = g;
+    pencilBtn.onclick=function(e){
+      e.stopPropagation();
+      /* For custom Firebase games */
+      if(_g._fbId){ openEditGame(_g._fbId, _g); closeDetail(); return; }
+      /* For built-in games — open upload with pre-filled data */
+      _editingId = 'builtin_'+_g.id;
+      _uploadCoverB64 = _g.img||null;
+      document.getElementById('uploadModalTitle').textContent='Editar juego';
+      document.getElementById('submitGameBtn').textContent='Guardar cambios';
+      document.getElementById('gfName').value=_g.name||'';
+      document.getElementById('gfDev').value=_g.dev||'';
+      document.getElementById('gfCat').value=_g.cat||'Acción';
+      document.getElementById('gfYear').value=_g.year||2020;
+      document.getElementById('gfRating').value=_g.rating||4.0;
+      document.getElementById('gfPlat').value=(_g.plat||['pc']).join(',');
+      document.getElementById('gfDesc').value=_g.desc||'';
+      document.getElementById('gfLink').value=_g._overrideLink||_g.apk||_g.steam||_g.play||'';
+      document.getElementById('gfMobileLink').value=_g.mobileLink||_g._mobileLinkOverride||_g.play||'';
+      var cp=document.getElementById('coverPreview');
+      if(_g.img){cp.src=_g.img;cp.style.display='block';}else{cp.style.display='none';}
+      closeDetail();
+      document.getElementById('uploadModal').style.display='flex';
+    };
+    bannerWrap.appendChild(pencilBtn);
+  }
+  box.appendChild(bannerWrap);
+  var top=document.createElement('div');top.className='d-top';
+  var ico=document.createElement('div');ico.className='d-ico';
+  if(g.img){var icoImg=document.createElement('img');icoImg.src=g.img;icoImg.style.cssText='width:100%;height:100%;object-fit:cover;display:block';icoImg.onerror=function(){var ph=document.createElement('div');ph.className='d-ico-ph';var l=document.createElement('span');l.className='l';l.textContent=initials(g.name);ph.appendChild(l);ico.replaceChild(ph,icoImg);};ico.appendChild(icoImg);}
+  else{var iph=document.createElement('div');iph.className='d-ico-ph';var il=document.createElement('span');il.className='l';il.textContent=initials(g.name);iph.appendChild(il);ico.appendChild(iph);}
+  var titles=document.createElement('div');titles.className='d-titles';
+  var dn=document.createElement('div');dn.className='d-name';dn.textContent=g.name;
+  var dd=document.createElement('div');dd.className='d-dev';dd.textContent=g.dev+' · '+g.cat;
+  titles.appendChild(dn);titles.appendChild(dd);top.appendChild(ico);top.appendChild(titles);box.appendChild(top);
+  var stats=document.createElement('div');stats.className='d-stats';
+  [['⭐ '+g.rating,'Valoración'],[starsStr(g.rating),'Estrellas'],[String(g.year),'Año'],[g.plat.length>1?'Multi':'Solo '+g.plat[0],'Plataforma']].forEach(function(s){var st=document.createElement('div');st.className='d-stat';var sv=document.createElement('div');sv.className='d-sv';sv.textContent=s[0];sv.style.color=s[1]==='Valoración'?ratingColor(g.rating):'var(--text)';var sl=document.createElement('div');sl.className='d-sl';sl.textContent=s[1];st.appendChild(sv);st.appendChild(sl);stats.appendChild(st);});
+  box.appendChild(stats);
+  var btns=document.createElement('div');btns.className='d-btns';
+  var dl=document.createElement('button');dl.className='d-btn pri';
+  dl.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Obtener';
+  dl.onclick=function(){
+    var hasLink=g._overrideLink||g.apk||g.steam;
+    if(!hasLink&&(!g.plat||!g.plat.includes('pc'))&&g.plat&&g.plat.every(function(p){return p==='mobile';})){
+      showNotAvailableModal('pc');return;
+    }
+    doDownload(g);closeDetail();
+  };
+  btns.appendChild(dl);
+  /* Movil button */
+  var mobileLinkVal = g.mobileLink||g._mobileLinkOverride||(g.plat&&g.plat.includes('mobile')&&!g._overrideLink?g.play:null)||null;
+  var mobBtn=document.createElement('button');mobBtn.className='d-btn sec';
+  mobBtn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"></rect><line x1="12" y1="18" x2="12" y2="18"></line></svg> Movil';
+  mobBtn.onclick=function(){
+    if(mobileLinkVal){window.open(mobileLinkVal,'_blank','noopener');}
+    else{showNotAvailableModal('movil');}
+  };
+  btns.appendChild(mobBtn);
+  box.appendChild(btns);
+  var dh=document.createElement('div');dh.className='d-dh';dh.textContent='Descripción';
+  var desc=document.createElement('div');desc.className='d-desc';desc.textContent=g.desc||'';
+  box.appendChild(dh);box.appendChild(desc);
+  var plats=document.createElement('div');plats.className='d-plats';
+  g.plat.forEach(function(p){var t=document.createElement('span');t.className='ptag '+p;t.textContent={pc:'PC',mobile:'Móvil',console:'Consola',browser:'Navegador'}[p]||p;plats.appendChild(t);});
+  box.appendChild(plats);
+}
+
+function showNotAvailableModal(type){
+  var ex=document.getElementById('notAvailModal');if(ex)ex.remove();
+  var ov=document.createElement('div');ov.id='notAvailModal';
+  ov.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;padding:20px';
+  var box=document.createElement('div');
+  box.style.cssText='width:min(100%,360px);background:rgba(6,0,16,.99);border:1px solid rgba(168,85,247,.25);border-radius:18px;padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;box-shadow:0 0 0 1px rgba(168,85,247,.08),0 24px 60px rgba(0,0,0,.9)';
+  /* Icon */
+  var iconWrap=document.createElement('div');
+  iconWrap.style.cssText='width:56px;height:56px;border-radius:16px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);display:grid;place-items:center';
+  var isMobile=type==='movil';
+  iconWrap.innerHTML=isMobile
+    ?'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>'
+    :'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8M12 17v4"></path></svg>';
+  /* Title */
+  var title=document.createElement('div');
+  title.style.cssText='font-size:15px;font-weight:900;color:#eee8f8;line-height:1.3';
+  title.textContent=isMobile?'No disponible en movil':'No disponible en PC';
+  /* Message */
+  var msg=document.createElement('div');
+  msg.style.cssText='font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.65';
+  msg.textContent=isMobile
+    ?'Este juego no se encuentra disponible en movil por el momento.'
+    :'Este juego no se encuentra disponible en PC por el momento.';
+  /* Close button */
+  var closeBtn=document.createElement('button');
+  closeBtn.style.cssText='height:40px;padding:0 24px;border-radius:10px;background:linear-gradient(135deg,rgba(109,36,217,.7),rgba(168,85,247,.7));border:none;color:#fff;font-size:13px;font-weight:800;font-family:-apple-system,sans-serif;cursor:pointer;margin-top:4px;width:100%';
+  closeBtn.textContent='Entendido';closeBtn.onclick=function(){ov.remove();};
+  box.appendChild(iconWrap);box.appendChild(title);box.appendChild(msg);box.appendChild(closeBtn);
+  ov.appendChild(box);document.body.appendChild(ov);
+  ov.onclick=function(e){if(e.target===ov)ov.remove();};
+}
+function closeDetail(){document.getElementById('det').classList.remove('open');}
+document.getElementById('det').onclick=function(e){if(e.target===this)closeDetail();};
+
+/* ── SEARCH ── */
+var _st=null;
+document.getElementById('sIn').addEventListener('input',function(){
+  var q=this.value.trim();document.getElementById('sCl').style.display=q?'inline':'none';
+  clearTimeout(_st);
+  if(!q){document.getElementById('srch-sec').style.display='none';document.getElementById('cnt').style.display='';return;}
+  document.getElementById('cnt').style.display='none';
+  _st=setTimeout(function(){
+    var q2=document.getElementById('sIn').value.trim();if(!q2)return;
+    var ss=document.getElementById('srch-sec');ss.style.display='block';ss.innerHTML='';
+    var res=filterGames(q2);var off=OFFLINE.filter(function(g){return g.name.toLowerCase().includes(q2.toLowerCase());});
+    if(!res.length&&!off.length){ss.innerHTML='<div class="no-res">Sin resultados para "'+q2+'"</div>';return;}
+    if(res.length)renderList(ss,res.length+' resultados',res,false);
+    if(off.length){var oSec=document.createElement('div');oSec.style.marginBottom='16px';var oh=document.createElement('div');oh.style.cssText='font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;padding:0 12px;margin-bottom:8px';oh.textContent='Sin Conexión';oSec.appendChild(oh);renderOffline(oSec);ss.appendChild(oSec);}
+  },250);
+});
+document.getElementById('sCl').onclick=function(){document.getElementById('sIn').value='';this.style.display='none';document.getElementById('srch-sec').style.display='none';document.getElementById('cnt').style.display='';};
+
+/* ── HERO SWIPE ── */
+(function(){var sx=0,el=document.getElementById('hero');
+  el.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;},{passive:true});
+  el.addEventListener('touchend',function(e){var dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>40){var n=tabGames().length;goHero(dx>0?Math.max(0,state.hero-1):Math.min(Math.min(5,n-1),state.hero+1));if(state.timer){clearInterval(state.timer);state.timer=setInterval(function(){goHero((state.hero+1)%Math.min(6,tabGames().length));},5000);}}},{passive:true});
+})();
+
+/* ── INIT ── */
+buildTabs();render();
+window.addEventListener('pagehide',function(){if(state.timer){clearInterval(state.timer);state.timer=null;}});
+</script>
+<script>
+window.TF=window.TF||{};var TF=window.TF;
+TF.KEY_USER='tfapp_user';TF.KEY_XP='tfapp_xp';TF.KEY_LVL='tfapp_level';TF.XP_PER_LEVEL=1800;TF.MAX_LEVEL=25;
+TF.RANKS=[{min:1,max:5,rank:'I',icon:'⚔️',label:'Rango I'},{min:6,max:10,rank:'II',icon:'🛡️',label:'Rango II'},{min:11,max:15,rank:'III',icon:'👑',label:'Rango III'},{min:16,max:20,rank:'IV',icon:'💎',label:'Rango IV'},{min:21,max:25,rank:'GIGACHAD',icon:'💪',label:'GigaChad'}];
+TF.getRank=function(l){for(var i=0;i<TF.RANKS.length;i++){var r=TF.RANKS[i];if(l>=r.min&&l<=r.max)return r;}return TF.RANKS[TF.RANKS.length-1];};
+TF.getXP=function(){return parseInt(localStorage.getItem(TF.KEY_XP)||'0');};TF.getLvl=function(){return parseInt(localStorage.getItem(TF.KEY_LVL)||'1');};
+TF.saveXP=function(x,l){localStorage.setItem(TF.KEY_XP,x);localStorage.setItem(TF.KEY_LVL,l);};
+TF.xpTick=function(){var l=TF.getLvl();if(l>=TF.MAX_LEVEL)return;var x=TF.getXP()+60;if(x>=TF.XP_PER_LEVEL){x=0;l=Math.min(l+1,TF.MAX_LEVEL);TF.saveXP(x,l);}else TF.saveXP(x,l);};
+TF.startTicker=function(){if(TF._ticker)return;TF._ticker=setInterval(TF.xpTick,60000);};
+TF.NAV_CSS='#tf-nav{position:fixed;bottom:14px;left:0;right:0;margin:0 auto;z-index:8000;width:fit-content;display:flex;align-items:center;gap:2px;background:rgba(6,0,14,.85);backdrop-filter:blur(32px);border:1px solid rgba(255,255,255,.09);border-radius:22px;padding:6px 8px;box-shadow:0 8px 32px rgba(0,0,0,.5)}.tf-nb{display:flex;flex-direction:column;align-items:center;gap:3px;width:54px;height:46px;border-radius:16px;border:none;background:transparent;cursor:pointer;color:rgba(255,255,255,.38);transition:all .2s;padding:0}.tf-nb.on{color:#a855f7;background:rgba(168,85,247,.12)}.tf-nb svg{flex-shrink:0}.tf-nb-lbl{font-size:9px;font-weight:600;font-family:-apple-system,sans-serif}.tf-nb-dot{position:relative;width:4px;height:4px;border-radius:50%;background:#a855f7;opacity:0;margin-top:-1px}.tf-nb.on .tf-nb-dot{opacity:1}';
+TF.NAV_SVGs={home:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>',music:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>',browser:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>',games:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="4"></rect><path d="M6 12h4M8 10v4"></path><circle cx="16" cy="11" r="1" fill="currentColor" stroke="none"></circle><circle cx="18" cy="13" r="1" fill="currentColor" stroke="none"></circle></svg>',walls:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>',tv:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"></rect><path d="M9 3h6M12 7v2"></path></svg>'};
+TF.injectNav=function(active){var s=document.createElement('style');s.textContent=TF.NAV_CSS;document.head.appendChild(s);var nav=document.createElement('div');nav.id='tf-nav';var order=['home','music','browser','games','walls','tv'];var goMap={home:'go:principal',music:'go:tfmusic',browser:'go:tfvcore',games:'go:Tfgames',walls:'go:wallpapers',tv:'go:tftv'};var labels={home:'Inicio',music:'Música',browser:'Navegar',games:'Juegos',walls:'Walls',tv:'TFTV'};order.forEach(function(k){var btn=document.createElement('button');btn.className='tf-nb'+(k===active?' on':'');btn.innerHTML=TF.NAV_SVGs[k]+'<span class="tf-nb-lbl">'+labels[k]+'</span><div class="tf-nb-dot"></div>';btn.onclick=function(){if(k!==active)window.location.href=goMap[k];};nav.appendChild(btn);});document.body.appendChild(nav);var bp=document.createElement('style');bp.textContent='body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))!important}';document.head.appendChild(bp);};
+TF.startTicker();TF.injectNav('games');
+window.addEventListener('pagehide',function(){if(TF._ticker){clearInterval(TF._ticker);TF._ticker=null;}});
+</script>
+
+<!-- ADMIN MODE MODAL -->
+<div id="adminModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.8);backdrop-filter:blur(20px);align-items:flex-end;justify-content:center">
+  <div style="width:min(100%,500px);background:rgba(6,0,16,.99);border:1px solid rgba(168,85,247,.3);border-radius:18px 18px 0 0;padding:20px;display:flex;flex-direction:column;gap:14px;max-height:85vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:15px;font-weight:800;color:#eee8f8">Modo Administrador</div>
+      <button onclick="closeAdminModal()" style="width:26px;height:26px;border-radius:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);cursor:pointer;color:#7a6e98;font-size:14px;display:grid;place-items:center;font-family:inherit">✕</button>
+    </div>
+    <div id="adminPassPanel">
+      <p style="font-size:12px;color:#7a6e98;margin-bottom:12px">Ingresa la contraseña de staff para acceder.</p>
+      <input id="adminPassInp" type="password" placeholder="Contraseña de staff..." style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:10px 12px;color:#eee8f8;font-size:13.5px;font-family:-apple-system,sans-serif;outline:none;margin-bottom:10px"/>
+      <button onclick="checkAdminPass()" style="width:100%;padding:12px;border-radius:10px;background:linear-gradient(135deg,#6d24d9,#a855f7);border:none;color:#fff;font-size:13.5px;font-weight:800;font-family:-apple-system,sans-serif;cursor:pointer">Entrar</button>
+    </div>
+    <div id="adminPanel" style="display:none;flex-direction:column;gap:10px">
+      <div style="font-size:11px;font-weight:800;color:#a855f7;letter-spacing:.07em;text-transform:uppercase">Panel de Admin</div>
+      <button onclick="openUploadGame()" style="width:100%;padding:12px;border-radius:10px;background:linear-gradient(135deg,#e91e8c,#a855f7);border:none;color:#fff;font-size:13px;font-weight:800;font-family:-apple-system,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Subir nuevo juego
+      </button>
+      <div id="adminGamesList" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- UPLOAD / EDIT GAME MODAL -->
+<div id="uploadModal" style="display:none;position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,.85);backdrop-filter:blur(20px);align-items:flex-end;justify-content:center;overflow-y:auto">
+  <div style="width:min(100%,500px);background:rgba(6,0,16,.99);border:1px solid rgba(168,85,247,.3);border-radius:18px 18px 0 0;padding:20px;display:flex;flex-direction:column;gap:12px;min-height:50vh;padding-bottom:40px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+      <div id="uploadModalTitle" style="font-size:14px;font-weight:800;color:#eee8f8">Subir juego</div>
+      <button onclick="closeUploadModal()" style="width:26px;height:26px;border-radius:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);cursor:pointer;color:#7a6e98;font-size:14px;display:grid;place-items:center;font-family:inherit">✕</button>
+    </div>
+    <!-- Cover -->
+    <div onclick="document.getElementById('gameImgFile').click()" style="width:100%;height:140px;border-radius:12px;background:rgba(255,255,255,.04);border:2px dashed rgba(168,85,247,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;position:relative;overflow:hidden" id="coverPreviewWrap">
+      <img id="coverPreview" src="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none"/>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(168,85,247,.6)" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>
+      <span style="font-size:11.5px;color:rgba(168,85,247,.8);font-weight:600">Toca para elegir portada</span>
+    </div>
+    <input type="file" id="gameImgFile" accept="image/*" style="display:none" onchange="previewGameImg(this)"/>
+    <!-- Fields -->
+    <input id="gfName" type="text" placeholder="Nombre del juego *" maxlength="60" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:10px 12px;color:#eee8f8;font-size:13px;font-family:-apple-system,sans-serif;outline:none"/>
+    <input id="gfDev" type="text" placeholder="Desarrollador *" maxlength="40" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:10px 12px;color:#eee8f8;font-size:13px;font-family:-apple-system,sans-serif;outline:none"/>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <select id="gfCat" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:10px 12px;color:#eee8f8;font-size:13px;font-family:-apple-system,sans-serif;outline:none">
+        <option value="Acción">Acción</option><option value="Aventura">Aventura</option><option value="RPG">RPG</option><option value="Disparos">Disparos</option><option value="Estrategia">Estrategia</option><option value="MOBA">MOBA</option><option value="Battle Royale">Battle Royale</option><option value="Casual">Casual</option><option value="Puzzle">Puzzle</option><option value="Deportes">Deportes</option><option value="Carreras">Carreras</option><option value="Horror">Horror</option><option value="Simulación">Simulación</option><option value="Sandbox">Sandbox</option><option value="Plataforma">Plataforma</option><option value="Social">Social</option>
+      </select>
+      <input id="gfYear" type="number" placeholder="Año *" min="1980" max="2030" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:10px 12px;color:#eee8f8;font-size:13px;font-family:-apple-system,sans-serif;outline:none"/>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <input id="gfRating" type="number" placeholder="Rating (1-5) *" min="1" max="5" step="0.1" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:10px 12px;color:#eee8f8;font-size:13px;font-family:-apple-system,sans-serif;outline:none"/>
+      <select id="gfPlat" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:10px 12px;color:#eee8f8;font-size:13px;font-family:-apple-system,sans-serif;outline:none">
+        <option value="mobile">Móvil</option><option value="pc">PC</option><option value="console">Consola</option><option value="pc,mobile">PC + Móvil</option><option value="pc,console">PC + Consola</option><option value="mobile,console">Móvil + Consola</option><option value="pc,mobile,console">Multi-plataforma</option>
+      </select>
+    </div>
+    <textarea id="gfDesc" placeholder="Descripción del juego *" rows="3" maxlength="500" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:10px 12px;color:#eee8f8;font-size:13px;font-family:-apple-system,sans-serif;outline:none;resize:none"></textarea>
+    <div style="font-size:10px;font-weight:700;color:rgba(168,85,247,.8);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px">Links de descarga</div>
+    <input id="gfLink" type="url" placeholder="URL boton Obtener (PC/General) *" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:10px 12px;color:#eee8f8;font-size:13px;font-family:-apple-system,sans-serif;outline:none"/>
+    <input id="gfMobileLink" type="url" placeholder="URL boton Movil (opcional)" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:10px 12px;color:#eee8f8;font-size:13px;font-family:-apple-system,sans-serif;outline:none"/>
+    <button onclick="submitGame()" id="submitGameBtn" style="width:100%;padding:12px;border-radius:10px;background:linear-gradient(135deg,#e91e8c,#a855f7);border:none;color:#fff;font-size:13.5px;font-weight:800;font-family:-apple-system,sans-serif;cursor:pointer">Publicar juego</button>
+  </div>
+</div>
+
+<script>
+/* TFGAMES EXTRA: Profile + Admin + Firebase */
+var DB = 'https://tfapp-626ed-default-rtdb.firebaseio.com';
+var IMGBB_KEY = '5b19d0b6dc77db62f9e15ee47c8aae2e';
+var _isAdmin = localStorage.getItem('tfg_admin') === '1';
+var _editingId = null; /* null = new game, string = editing existing */
+var _uploadCoverB64 = null;
+
+/* ── Profile UI ── */
+function showProfileOrLogin(){
+  var u=null;try{u=JSON.parse(localStorage.getItem('tfapp_user')||'null');}catch(e){}
+  if(!u){if(typeof TF!=='undefined'&&TF.showLogin)TF.showLogin(function(){updateProfileUI();});return;}
+  if(typeof TF!=='undefined'&&TF.showProfilePanel){TF.showProfilePanel();return;}
+  var lvl=parseInt(localStorage.getItem('tfapp_level')||'1');if(lvl>25)lvl=25;
+  var xp=parseInt(localStorage.getItem('tfapp_xp')||'0');
+  var pct=lvl>=25?100:Math.min(100,Math.round((xp/1800)*100));
+  var ranks=[{min:1,max:5,label:'Rango I'},{min:6,max:10,label:'Rango II'},{min:11,max:15,label:'Rango III'},{min:16,max:20,label:'Rango IV'},{min:21,max:25,label:'GigaChad'}];
+  var rank=ranks[4];for(var ri=0;ri<ranks.length;ri++){if(lvl>=ranks[ri].min&&lvl<=ranks[ri].max){rank=ranks[ri];break;}}
+  var isMax=lvl>=25;
+  var panel=document.createElement('div');
+  panel.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.7);backdrop-filter:blur(14px);display:flex;align-items:flex-end;justify-content:center';
+  var box=document.createElement('div');
+  box.style.cssText='width:min(100%,440px);background:rgba(6,0,13,.99);border:1px solid rgba(255,255,255,.09);border-radius:18px 18px 0 0;padding:20px;display:flex;flex-direction:column;gap:14px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))';
+  var hRow=document.createElement('div');hRow.style.cssText='display:flex;align-items:center;justify-content:space-between';
+  var pTitle=document.createElement('div');pTitle.style.cssText='font-size:14px;font-weight:800';pTitle.textContent='Mi perfil';
+  var pClose=document.createElement('button');pClose.style.cssText='width:26px;height:26px;border-radius:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);cursor:pointer;color:#7a6e98;font-size:14px;display:grid;place-items:center;font-family:inherit';pClose.textContent='x';pClose.onclick=function(){panel.remove();};
+  hRow.appendChild(pTitle);hRow.appendChild(pClose);box.appendChild(hRow);
+  var uRow=document.createElement('div');uRow.style.cssText='display:flex;align-items:center;gap:12px';
+  var avWrap=document.createElement('div');avWrap.style.cssText='position:relative;flex-shrink:0';
+  if(u&&u.avatar){var avEl=document.createElement('img');avEl.src=u.avatar;avEl.style.cssText='width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid rgba(168,85,247,.4)';avWrap.appendChild(avEl);var onDot=document.createElement('div');onDot.style.cssText='position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:#4ade80;border:2px solid #06000d';avWrap.appendChild(onDot);}
+  uRow.appendChild(avWrap);
+  var uInfo=document.createElement('div');
+  var uName=document.createElement('div');uName.style.cssText='font-size:15px;font-weight:800;color:#eee8f8';uName.textContent=(u&&u.name)||'Usuario';
+  var uRank=document.createElement('div');uRank.style.cssText='font-size:11.5px;color:#a855f7;margin-top:2px';uRank.textContent=rank.label;
+  uInfo.appendChild(uName);uInfo.appendChild(uRank);uRow.appendChild(uInfo);box.appendChild(uRow);
+  var xpBox=document.createElement('div');xpBox.style.cssText='background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:12px';
+  var xpRow=document.createElement('div');xpRow.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:7px';
+  var xpL=document.createElement('div');xpL.style.cssText='font-size:11.5px;font-weight:700;color:#eee8f8';xpL.textContent='Nivel '+lvl+(isMax?' MAX':'');
+  var xpP=document.createElement('div');xpP.style.cssText='font-size:10.5px;color:#7a6e98';xpP.textContent=pct+'% completado';
+  xpRow.appendChild(xpL);xpRow.appendChild(xpP);
+  var barWrap=document.createElement('div');barWrap.style.cssText='height:5px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden';
+  var bar=document.createElement('div');bar.style.cssText='height:100%;background:linear-gradient(90deg,#6d24d9,#a855f7);border-radius:99px;width:'+pct+'%';
+  barWrap.appendChild(bar);xpBox.appendChild(xpRow);xpBox.appendChild(barWrap);
+  var xpSub=document.createElement('div');xpSub.style.cssText='font-size:10.5px;color:#7a6e98;margin-top:6px';
+  xpSub.textContent=isMax?'Nivel maximo! Eres GigaChad.':(25-lvl)+' niveles para el maximo - '+rank.label;
+  xpBox.appendChild(xpSub);box.appendChild(xpBox);
+  panel.appendChild(box);document.body.appendChild(panel);
+  panel.onclick=function(e){if(e.target===panel)panel.remove();};
+}
+function updateProfileUI(){
+  var u = null;
+  try { u = JSON.parse(localStorage.getItem('tfapp_user') || 'null'); } catch(e){}
+  var img = document.getElementById('hProfileImg');
+  var svg = document.getElementById('hProfileSvg');
+  var dot = document.getElementById('hOnlineDot');
+  if(u && u.avatar && img){
+    img.src = u.avatar; img.style.display = 'block';
+    if(svg) svg.style.display = 'none';
+    if(dot) dot.style.display = 'block';
+  } else {
+    if(img) img.style.display = 'none';
+    if(svg) svg.style.display = 'block';
+    if(dot) dot.style.display = 'none';
+  }
+}
+updateProfileUI();
+
+/* ── Logo → Admin Modal ── */
+document.getElementById('hBrand').onclick = function(){ openAdminModal(); };
+
+function openAdminModal(){
+  var m = document.getElementById('adminModal');
+  m.style.display = 'flex';
+  if(_isAdmin){
+    document.getElementById('adminPassPanel').style.display = 'none';
+    showAdminPanel();
+  } else {
+    document.getElementById('adminPassPanel').style.display = 'block';
+    document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('adminPassInp').value = '';
+  }
+}
+function closeAdminModal(){ document.getElementById('adminModal').style.display = 'none'; }
+document.getElementById('adminModal').onclick = function(e){ if(e.target === this) closeAdminModal(); };
+
+function checkAdminPass(){
+  var pw = (document.getElementById('adminPassInp').value || '').trim().toUpperCase();
+  if(pw === 'TFSTAFF'){
+    _isAdmin = true;
+    localStorage.setItem('tfg_admin','1');
+    showAdminPanel();
+  } else {
+    document.getElementById('adminPassInp').value = '';
+    document.getElementById('adminPassInp').placeholder = 'Contraseña incorrecta...';
+    setTimeout(function(){ document.getElementById('adminPassInp').placeholder = 'Contraseña de staff...'; }, 1500);
+  }
+}
+document.getElementById('adminPassInp').addEventListener('keydown', function(e){ if(e.key === 'Enter') checkAdminPass(); });
+
+function showAdminPanel(){
+  document.getElementById('adminPassPanel').style.display = 'none';
+  document.getElementById('adminPanel').style.display = 'flex';
+  loadAdminGamesList();
+}
+
+/* ── Load admin games list for editing ── */
+function loadAdminGamesList(){
+  var el = document.getElementById('adminGamesList');
+  el.innerHTML = '<div style="font-size:11px;color:var(--muted);text-align:center;padding:8px">Cargando juegos personalizados...</div>';
+  fetch(DB + '/customGames.json')
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      el.innerHTML = '';
+      if(!data || !Object.keys(data).length){
+        el.innerHTML = '<div style="font-size:11px;color:var(--muted);text-align:center;padding:8px">Sin juegos publicados aún</div>';
+        return;
+      }
+      Object.entries(data).forEach(function(entry){
+        var id = entry[0], g = entry[1];
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)';
+        var ico = document.createElement('div');
+        ico.style.cssText = 'width:38px;height:38px;border-radius:8px;overflow:hidden;flex-shrink:0;background:var(--soft)';
+        if(g.img){ var img = document.createElement('img'); img.src = g.img; img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block'; ico.appendChild(img); }
+        var info = document.createElement('div'); info.style.cssText = 'flex:1;min-width:0';
+        var nm = document.createElement('div'); nm.style.cssText = 'font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'; nm.textContent = g.name;
+        var cat = document.createElement('div'); cat.style.cssText = 'font-size:10px;color:var(--muted);margin-top:1px'; cat.textContent = g.cat + ' · ' + g.year;
+        info.appendChild(nm); info.appendChild(cat);
+        var editBtn = document.createElement('button');
+        editBtn.style.cssText = 'height:26px;padding:0 10px;border-radius:7px;border:1px solid rgba(168,85,247,.4);background:transparent;color:var(--ac);font-size:10px;font-weight:800;font-family:-apple-system,sans-serif;cursor:pointer;flex-shrink:0';
+        editBtn.textContent = 'Editar';
+        editBtn.onclick = (function(gid, gg){ return function(){ openEditGame(gid, gg); }; })(id, g);
+        var delBtn = document.createElement('button');
+        delBtn.style.cssText = 'height:26px;padding:0 10px;border-radius:7px;border:1px solid rgba(244,63,94,.3);background:transparent;color:#f43f5e;font-size:10px;font-weight:800;font-family:-apple-system,sans-serif;cursor:pointer;flex-shrink:0';
+        delBtn.textContent = 'Borrar';
+        delBtn.onclick = (function(gid, gname){ return function(){
+          if(!confirm('Borrar "'+gname+'"?')) return;
+          fetch(DB+'/customGames/'+gid+'.json',{method:'DELETE'}).then(function(){
+            loadAdminGamesList(); loadCustomGames(); toast('Juego eliminado');
+          });
+        }; })(id, g.name);
+        row.appendChild(ico); row.appendChild(info); row.appendChild(editBtn); row.appendChild(delBtn);
+        el.appendChild(row);
+      });
+    })
+    .catch(function(){ el.innerHTML = '<div style="font-size:11px;color:#f43f5e;text-align:center;padding:8px">Error al cargar</div>'; });
+}
+
+/* ── Upload / Edit Game ── */
+function openUploadGame(){
+  _editingId = null;
+  _uploadCoverB64 = null;
+  document.getElementById('uploadModalTitle').textContent = 'Subir nuevo juego';
+  document.getElementById('submitGameBtn').textContent = 'Publicar juego';
+  clearUploadForm();
+  document.getElementById('uploadModal').style.display = 'flex';
+  document.getElementById('adminModal').style.display = 'none';
+}
+function openEditGame(id, g){
+  _editingId = id;
+  _uploadCoverB64 = g.img || null;
+  document.getElementById('uploadModalTitle').textContent = 'Editar juego';
+  document.getElementById('submitGameBtn').textContent = 'Guardar cambios';
+  /* Fill fields */
+  document.getElementById('gfName').value = g.name || '';
+  document.getElementById('gfDev').value = g.dev || '';
+  document.getElementById('gfCat').value = g.cat || 'Acción';
+  document.getElementById('gfYear').value = g.year || new Date().getFullYear();
+  document.getElementById('gfRating').value = g.rating || 4.0;
+  document.getElementById('gfPlat').value = (g.plat||['mobile']).join(',');
+  document.getElementById('gfDesc').value = g.desc || '';
+  document.getElementById('gfLink').value = g.link || '';
+  var cp = document.getElementById('coverPreview');
+  if(g.img){ cp.src = g.img; cp.style.display = 'block'; }
+  else { cp.style.display = 'none'; }
+  document.getElementById('uploadModal').style.display = 'flex';
+  document.getElementById('adminModal').style.display = 'none';
+}
+function clearUploadForm(){
+  ['gfName','gfDev','gfYear','gfRating','gfDesc','gfLink','gfMobileLink'].forEach(function(id){ document.getElementById(id).value = ''; });
+  document.getElementById('coverPreview').style.display = 'none';
+  document.getElementById('coverPreview').src = '';
+  document.getElementById('gameImgFile').value = '';
+}
+function closeUploadModal(){ document.getElementById('uploadModal').style.display = 'none'; }
+document.getElementById('uploadModal').onclick = function(e){ if(e.target === this) closeUploadModal(); };
+
+function previewGameImg(input){
+  var f = input.files[0]; if(!f) return;
+  var reader = new FileReader();
+  reader.onload = function(){
+    _uploadCoverB64 = reader.result;
+    var cp = document.getElementById('coverPreview');
+    cp.src = reader.result; cp.style.display = 'block';
+  };
+  reader.readAsDataURL(f);
+}
+
+async function submitGame(){
+  var name = (document.getElementById('gfName').value||'').trim();
+  var dev = (document.getElementById('gfDev').value||'').trim();
+  var cat = document.getElementById('gfCat').value;
+  var year = parseInt(document.getElementById('gfYear').value||0);
+  var rating = parseFloat(document.getElementById('gfRating').value||0);
+  var platRaw = document.getElementById('gfPlat').value;
+  var desc = (document.getElementById('gfDesc').value||'').trim();
+  var link = (document.getElementById('gfLink').value||'').trim();
+  var mobileLink = (document.getElementById('gfMobileLink').value||'').trim();
+
+  if(!name||!dev||!year||!rating||!desc||!link){ toast('Completa todos los campos obligatorios','err'); return; }
+  if(!_uploadCoverB64){ toast('Selecciona una portada','err'); return; }
+  if(rating < 1 || rating > 5){ toast('Rating debe ser entre 1 y 5','err'); return; }
+
+  var btn = document.getElementById('submitGameBtn');
+  btn.textContent = 'Subiendo...'; btn.disabled = true;
+
+  /* Upload image to imgBB */
+  var imgUrl = _uploadCoverB64;
+  try {
+    var b64 = _uploadCoverB64.split(',')[1] || _uploadCoverB64;
+    var fd = new FormData(); fd.append('image', b64);
+    var r = await fetch('https://api.imgbb.com/1/upload?key='+IMGBB_KEY, {method:'POST', body:fd});
+    var d = await r.json();
+    if(d.success && d.data && d.data.url) imgUrl = d.data.url;
+  } catch(e){ /* keep base64 if imgbb fails */ }
+
+  var gameData = {
+    name:name, dev:dev, cat:cat, year:year, rating:rating,
+    plat:platRaw.split(','), desc:desc, link:link,
+    mobileLink:mobileLink||null,
+    img:imgUrl, ts:Date.now()
+  };
+
+  var isBuiltin=_editingId&&_editingId.startsWith('builtin_');
+  var fbId,path;
+  if(isBuiltin){fbId=_editingId.replace('builtin_','');path=DB+'/gameOverrides/'+fbId+'.json';}
+  else if(_editingId){fbId=_editingId;path=DB+'/customGames/'+fbId+'.json';}
+  else{fbId=Date.now()+'_'+Math.random().toString(36).slice(2,6);path=DB+'/customGames/'+fbId+'.json';}
+
+  try {
+    await fetch(path, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(gameData)});
+    toast(isBuiltin?'Cambios aplicados para todos':(_editingId?'Juego actualizado':'Juego publicado'),'ok');
+    closeUploadModal();
+    loadCustomGames();
+    loadAdminGamesList();
+    btn.textContent = _editingId ? 'Guardar cambios' : 'Publicar juego';
+    btn.disabled = false;
+    _editingId = null;
+  } catch(e){
+    toast('Error al guardar: '+e.message, 'err');
+    btn.textContent = _editingId ? 'Guardar cambios' : 'Publicar juego';
+    btn.disabled = false;
+  }
+}
+
+/* ── Load Custom Games from Firebase ── */
+var _customGames = [];
+function loadCustomGames(){
+  fetch(DB+'/customGames.json')
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      _customGames = [];
+      if(!data) return;
+      Object.entries(data).forEach(function(entry){
+        var g = entry[1];
+        g._fbId = entry[0];
+        g._custom = true;
+        g.apk = g.link; g.play = g.link; g.steam = null;
+        _customGames.push(g);
+      });
+      _customGames.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+      renderCustomSection();
+    })
+    .catch(function(){});
+}
+
+function renderCustomSection(){
+  var existing = document.getElementById('customSec');
+  if(existing) existing.remove();
+  if(!_customGames.length) return;
+  var cnt = document.getElementById('cnt');
+  if(!cnt) return;
+  var sec = document.createElement('div');
+  sec.id = 'customSec'; sec.className = 'sec';
+  sec.style.cssText = 'order:-1;margin-bottom:20px';
+  var hdr = document.createElement('div'); hdr.className = 's-hdr';
+  var t = document.createElement('span'); t.className = 's-ttl';
+  t.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2.2" stroke-linecap="round" style="vertical-align:middle;margin-right:4px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>Juegos recientes';
+  hdr.appendChild(t); sec.appendChild(hdr);
+  var list = document.createElement('div'); list.className = 'glist';
+  _customGames.forEach(function(g, i){
+    var item = document.createElement('div'); item.className = 'gli';
+    var n = document.createElement('div'); n.className = 'gli-n'; n.textContent = i+1; item.appendChild(n);
+    var cover = document.createElement('div'); cover.className = 'gli-cover';
+    if(g.img){
+      var img = document.createElement('img'); img.src = g.img; img.loading = 'lazy';
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
+      img.onerror = function(){ cover.innerHTML = '<div class="gli-ph"><span class="l">'+initials(g.name)+'</span></div>'; };
+      cover.appendChild(img);
+    } else { cover.innerHTML = '<div class="gli-ph"><span class="l">'+initials(g.name)+'</span></div>'; }
+    var info = document.createElement('div'); info.className = 'gli-info';
+    var nm = document.createElement('div'); nm.className = 'gli-name'; nm.textContent = g.name;
+    var dv = document.createElement('div'); dv.className = 'gli-dev'; dv.textContent = g.dev+' · '+g.cat;
+    var st = document.createElement('div'); st.className = 'gli-stars'; st.style.color = ratingColor(g.rating); st.textContent = starsStr(g.rating)+' '+g.rating+' · '+g.year;
+    info.appendChild(nm); info.appendChild(dv); info.appendChild(st);
+    var btn = document.createElement('button'); btn.className = 'gli-btn'; btn.textContent = 'Obtener';
+    btn.onclick = function(e){ e.stopPropagation(); window.open(g.link,'_blank','noopener'); toast('Abriendo...'); };
+    item.appendChild(cover); item.appendChild(info); item.appendChild(btn);
+    item.onclick = function(){
+      /* Custom game detail */
+      var g2 = Object.assign({}, g);
+      g2.plat = Array.isArray(g2.plat) ? g2.plat : [g2.plat||'mobile'];
+      openDetail(g2);
+    };
+    list.appendChild(item);
+  });
+  sec.appendChild(list);
+  /* Insert at top of cnt */
+  if(cnt.firstChild) cnt.insertBefore(sec, cnt.firstChild);
+  else cnt.appendChild(sec);
+}
+
+/* Override doDownload for custom games */
+var _origDoDownload = doDownload;
+doDownload = function(g){
+  if(g._custom && g.link){window.open(g.link,'_blank','noopener');toast('Abriendo...');return;}
+  if(g._overridden && g._overrideLink){window.open(g._overrideLink,'_blank','noopener');toast('Abriendo...');return;}
+  _origDoDownload(g);
+};
+
+/* Init: load custom games + overrides from Firebase */
+loadCustomGames();
+loadGameOverrides();
+function loadGameOverrides(){
+  fetch(DB+'/gameOverrides.json').then(function(r){return r.json();}).then(function(data){
+    if(!data)return;
+    Object.entries(data).forEach(function(entry){
+      var id=entry[0],ov=entry[1];
+      var game=GAMES.find(function(g){return g.id===id;});
+      if(!game)return;
+      if(ov.img)game.img=ov.img;
+      if(ov.link){game.apk=ov.link;game.steam=null;game.play=null;game._overrideLink=ov.link;}
+      if(ov.name)game.name=ov.name;if(ov.dev)game.dev=ov.dev;if(ov.cat)game.cat=ov.cat;
+      if(ov.year)game.year=ov.year;if(ov.rating)game.rating=ov.rating;if(ov.desc)game.desc=ov.desc;
+      if(ov.plat)game.plat=Array.isArray(ov.plat)?ov.plat:[ov.plat];
+      game._overridden=true;
+    });
+    render();
+  }).catch(function(){});
+}
+</script>
+
+</body>
+      </html>
