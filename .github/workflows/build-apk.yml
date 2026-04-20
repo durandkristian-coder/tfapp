@@ -55,12 +55,11 @@ jobs:
             }
           }' > capacitor.config.json
 
-      - name: Preparar carpeta www
+      - name: Preparar carpeta www y splash
         run: |
           mkdir -p www
           cp *.html www/
           python3 -c "
-          html = open('www/splash.html').read() if __import__('os').path.exists('www/splash.html') else ''
           splash = '''<!DOCTYPE html>
           <html lang=\"es\">
           <head>
@@ -71,8 +70,8 @@ jobs:
           *{margin:0;padding:0;box-sizing:border-box}
           html,body{height:100%;background:#0a0011;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px}
           .logo{width:110px;height:110px;border-radius:26px;box-shadow:0 0 40px rgba(168,85,247,.5);animation:pop .45s cubic-bezier(.34,1.56,.64,1) both}
-          .name{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:30px;font-weight:900;background:linear-gradient(90deg,#e9d5ff,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center}
-          .sub{font-family:-apple-system,sans-serif;font-size:12px;color:rgba(255,255,255,.35);letter-spacing:.1em;text-align:center;text-transform:uppercase}
+          .name{font-family:-apple-system,sans-serif;font-size:30px;font-weight:900;background:linear-gradient(90deg,#e9d5ff,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center}
+          .sub{font-family:-apple-system,sans-serif;font-size:12px;color:rgba(255,255,255,.35);letter-spacing:.1em;text-align:center}
           .bar-wrap{width:140px;height:2px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-top:10px}
           .bar{height:100%;width:0%;background:linear-gradient(90deg,#7e3cff,#d9a3ff);border-radius:2px;animation:load 1.7s ease forwards}
           @keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
@@ -81,10 +80,7 @@ jobs:
           </head>
           <body>
           <img class=\"logo\" src=\"https://i.imgur.com/lALmGx6.png\" alt=\"TFAPP\"/>
-          <div>
-            <div class=\"name\">TFAPP</div>
-            <div class=\"sub\" style=\"margin-top:5px\">The Friendly Village</div>
-          </div>
+          <div><div class=\"name\">TFAPP</div><div class=\"sub\" style=\"margin-top:5px\">The Friendly Village</div></div>
           <div class=\"bar-wrap\"><div class=\"bar\"></div></div>
           <script>setTimeout(function(){window.location.replace(\"hub.html\");},2000);</script>
           </body>
@@ -108,31 +104,22 @@ jobs:
           convert -size 1024x1024 xc:"#1a0035" bg.png
           convert bg.png logo.png -gravity center -resize 800x800 -composite icon_full.png
 
-          rm -rf android/app/src/main/res/mipmap-mdpi
-          rm -rf android/app/src/main/res/mipmap-hdpi
-          rm -rf android/app/src/main/res/mipmap-xhdpi
-          rm -rf android/app/src/main/res/mipmap-xxhdpi
-          rm -rf android/app/src/main/res/mipmap-xxxhdpi
-          rm -rf android/app/src/main/res/mipmap-anydpi-v26
+          rm -rf android/app/src/main/res/mipmap-mdpi android/app/src/main/res/mipmap-hdpi
+          rm -rf android/app/src/main/res/mipmap-xhdpi android/app/src/main/res/mipmap-xxhdpi
+          rm -rf android/app/src/main/res/mipmap-xxxhdpi android/app/src/main/res/mipmap-anydpi-v26
 
           for row in "mipmap-mdpi 48" "mipmap-hdpi 72" "mipmap-xhdpi 96" "mipmap-xxhdpi 144" "mipmap-xxxhdpi 192"; do
-            folder=$(echo $row | cut -d' ' -f1)
-            size=$(echo $row | cut -d' ' -f2)
-            dir="android/app/src/main/res/$folder"
-            mkdir -p "$dir"
+            folder=$(echo $row | cut -d' ' -f1); size=$(echo $row | cut -d' ' -f2)
+            dir="android/app/src/main/res/$folder"; mkdir -p "$dir"
             convert icon_full.png -resize "${size}x${size}" "$dir/ic_launcher.png"
             convert icon_full.png -resize "${size}x${size}" "$dir/ic_launcher_round.png"
           done
 
           for row in "mipmap-mdpi 108" "mipmap-hdpi 162" "mipmap-xhdpi 216" "mipmap-xxhdpi 324" "mipmap-xxxhdpi 432"; do
-            folder=$(echo $row | cut -d' ' -f1)
-            size=$(echo $row | cut -d' ' -f2)
-            inner=$((size * 66 / 100))
-            dir="android/app/src/main/res/$folder"
-            mkdir -p "$dir"
-            convert logo.png -resize "${inner}x${inner}" \
-              -gravity center -background none -extent "${size}x${size}" \
-              "$dir/ic_launcher_foreground.png"
+            folder=$(echo $row | cut -d' ' -f1); size=$(echo $row | cut -d' ' -f2)
+            inner=$((size * 66 / 100)); dir="android/app/src/main/res/$folder"; mkdir -p "$dir"
+            convert logo.png -resize "${inner}x${inner}" -gravity center -background none \
+              -extent "${size}x${size}" "$dir/ic_launcher_foreground.png"
           done
 
           mkdir -p android/app/src/main/res/mipmap-anydpi-v26
@@ -144,7 +131,6 @@ jobs:
           cp android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml \
              android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
 
-          # Editar el color en ic_launcher_background.xml que Capacitor ya creó
           python3 -c "
           import re, os
           path = 'android/app/src/main/res/values/ic_launcher_background.xml'
@@ -153,11 +139,9 @@ jobs:
               c = re.sub(r'<color name=\"ic_launcher_background\">[^<]+</color>',
                          '<color name=\"ic_launcher_background\">#1a0035</color>', c)
               open(path, 'w').write(c)
-              print('Color actualizado en', path)
           else:
               os.makedirs('android/app/src/main/res/values', exist_ok=True)
               open(path, 'w').write('<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n    <color name=\"ic_launcher_background\">#1a0035</color>\n</resources>\n')
-              print('ic_launcher_background.xml creado')
           "
 
       - name: Agregar permisos en AndroidManifest.xml
@@ -190,31 +174,28 @@ jobs:
               print('Permisos ya existen')
           "
 
-      - name: Construir APK
+      - name: Generar MainActivity con MediaSession nativo + CORS bypass
         run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
-
-      - name: Subir APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: TFAPP-v1
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 30
-
-      - name: Generar MainActivity con CORS bypass, audio background y permisos
-        run: |
-          MAIN="android/app/src/main/java/com/tfv/tfapp/MainActivity.java"
           python3 -c "
+          java = open('android/app/src/main/java/com/tfv/tfapp/MainActivity.java').read() if False else ''
           java = '''package com.tfv.tfapp;
 
 import android.Manifest;
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.media.MediaMetadata;
+import android.media.session.MediaSession;
+import android.media.session.PlaybackState;
 import android.os.Build;
 import android.os.Bundle;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
@@ -233,55 +214,97 @@ import java.util.Map;
 
 public class MainActivity extends BridgeActivity {
     private static final int PERM_REQ = 1001;
+    private static final int NOTIF_ID = 42;
+    private static final String CH_ID = \"tfmusic_playback\";
+    private static final String ACT_PP = \"com.tfv.tfapp.PLAY_PAUSE\";
+    private static final String ACT_NEXT = \"com.tfv.tfapp.NEXT\";
+    private static final String ACT_PREV = \"com.tfv.tfapp.PREV\";
+
+    private MediaSession mediaSession;
+    private NotificationManager notifMgr;
+    private BroadcastReceiver mediaReceiver;
+    private String curTitle = \"\";
+    private String curArtist = \"TFMusic\";
+    private boolean playing = false;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        crearCanalesNotificacion();
+    public void onCreate(Bundle s) {
+        super.onCreate(s);
+        notifMgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        crearCanal();
+        initMediaSession();
+        registrarReceiver();
         pedirPermisos();
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        configurarWebView();
+    @Override public void onStart() { super.onStart(); configurarWebView(); }
+
+    private void crearCanal() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel ch = new NotificationChannel(CH_ID, \"TFMusic\", NotificationManager.IMPORTANCE_LOW);
+            ch.setDescription(\"Controles de reproduccion\");
+            ch.setSound(null, null); ch.setShowBadge(false);
+            notifMgr.createNotificationChannel(ch);
+        }
     }
 
-    private void crearCanalesNotificacion() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel canal = new NotificationChannel(
-                "tfmusic_playback", "TFMusic - Reproduccion", NotificationManager.IMPORTANCE_LOW);
-            canal.setDescription("Controles de TFMusic");
-            canal.setSound(null, null);
-            canal.setShowBadge(false);
-            NotificationManager nm = getSystemService(NotificationManager.class);
-            if (nm != null) nm.createNotificationChannel(canal);
-        }
+    private void initMediaSession() {
+        mediaSession = new MediaSession(this, \"TFMusic\");
+        mediaSession.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS | MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
+        mediaSession.setCallback(new MediaSession.Callback() {
+            @Override public void onPlay()           { enviarAWebView(\"play_pause\"); }
+            @Override public void onPause()          { enviarAWebView(\"play_pause\"); }
+            @Override public void onSkipToNext()     { enviarAWebView(\"next\"); }
+            @Override public void onSkipToPrevious() { enviarAWebView(\"prev\"); }
+        });
+        mediaSession.setActive(true);
+    }
+
+    private void registrarReceiver() {
+        mediaReceiver = new BroadcastReceiver() {
+            @Override public void onReceive(Context ctx, Intent i) {
+                String a = i.getAction();
+                if (ACT_PP.equals(a))   enviarAWebView(\"play_pause\");
+                else if (ACT_NEXT.equals(a)) enviarAWebView(\"next\");
+                else if (ACT_PREV.equals(a)) enviarAWebView(\"prev\");
+            }
+        };
+        IntentFilter f = new IntentFilter();
+        f.addAction(ACT_PP); f.addAction(ACT_NEXT); f.addAction(ACT_PREV);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            registerReceiver(mediaReceiver, f, Context.RECEIVER_NOT_EXPORTED);
+        else registerReceiver(mediaReceiver, f);
+    }
+
+    private void enviarAWebView(final String action) {
+        runOnUiThread(() -> {
+            WebView wv = getBridge().getWebView();
+            if (wv != null)
+                wv.evaluateJavascript(\"if(window.TFMusicNativeCallback)TFMusicNativeCallback(\\'\" + action + \"\\');\", null);
+        });
     }
 
     private void pedirPermisos() {
-        List<String> perms = new ArrayList<>();
+        List<String> p = new ArrayList<>();
         if (Build.VERSION.SDK_INT >= 33) {
-            if (check(Manifest.permission.POST_NOTIFICATIONS)) perms.add(Manifest.permission.POST_NOTIFICATIONS);
-            if (check(Manifest.permission.READ_MEDIA_IMAGES))  perms.add(Manifest.permission.READ_MEDIA_IMAGES);
-            if (check(Manifest.permission.READ_MEDIA_VIDEO))   perms.add(Manifest.permission.READ_MEDIA_VIDEO);
+            if (chk(Manifest.permission.POST_NOTIFICATIONS)) p.add(Manifest.permission.POST_NOTIFICATIONS);
+            if (chk(Manifest.permission.READ_MEDIA_IMAGES))  p.add(Manifest.permission.READ_MEDIA_IMAGES);
+            if (chk(Manifest.permission.READ_MEDIA_VIDEO))   p.add(Manifest.permission.READ_MEDIA_VIDEO);
         } else {
-            if (check(Manifest.permission.READ_EXTERNAL_STORAGE)) perms.add(Manifest.permission.READ_EXTERNAL_STORAGE);
-            if (check(Manifest.permission.WRITE_EXTERNAL_STORAGE)) perms.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            if (chk(Manifest.permission.READ_EXTERNAL_STORAGE)) p.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+            if (chk(Manifest.permission.WRITE_EXTERNAL_STORAGE)) p.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         }
-        if (check(Manifest.permission.CAMERA)) perms.add(Manifest.permission.CAMERA);
-        if (!perms.isEmpty())
-            ActivityCompat.requestPermissions(this, perms.toArray(new String[0]), PERM_REQ);
+        if (chk(Manifest.permission.CAMERA)) p.add(Manifest.permission.CAMERA);
+        if (!p.isEmpty()) ActivityCompat.requestPermissions(this, p.toArray(new String[0]), PERM_REQ);
     }
 
-    private boolean check(String p) {
+    private boolean chk(String p) {
         return ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED;
     }
 
     private void configurarWebView() {
         WebView wv = getBridge().getWebView();
         if (wv == null) return;
-
         WebSettings s = wv.getSettings();
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setDomStorageEnabled(true);
@@ -290,47 +313,33 @@ public class MainActivity extends BridgeActivity {
         s.setAllowContentAccess(true);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
 
-        // CORS bypass: interceptar APIs externas y hacerlas nativas
+        wv.addJavascriptInterface(new TFMusicBridge(), \"TFMusicBridge\");
+
         wv.setWebViewClient(new BridgeWebViewClient(getBridge()) {
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest req) {
                 String url = req.getUrl().toString();
-                boolean intercept = url.contains("wallhaven.cc")
-                    || url.contains("corsproxy.io")
-                    || url.contains("api.tmdb.org")
-                    || url.contains("api.jikan.moe")
-                    || url.contains("image.tmdb.org");
-
-                if (intercept && "GET".equals(req.getMethod())) {
+                boolean intercept = url.contains(\"wallhaven.cc\") || url.contains(\"corsproxy.io\")
+                    || url.contains(\"api.tmdb.org\") || url.contains(\"api.jikan.moe\");
+                if (intercept && \"GET\".equals(req.getMethod())) {
                     try {
                         String target = url;
-                        if (target.startsWith("https://corsproxy.io/?"))
-                            target = target.substring("https://corsproxy.io/?".length());
-                        if (target.startsWith("https://corsproxy.io/raw?url="))
-                            target = java.net.URLDecoder.decode(
-                                target.substring("https://corsproxy.io/raw?url=".length()), "UTF-8");
-
-                        URL javaUrl = new URL(target);
-                        HttpURLConnection conn = (HttpURLConnection) javaUrl.openConnection();
-                        conn.setRequestMethod("GET");
-                        conn.setConnectTimeout(15000);
-                        conn.setReadTimeout(15000);
-                        conn.setRequestProperty("User-Agent",
-                            "Mozilla/5.0 (Android; TFApp/1.0)");
-                        conn.setRequestProperty("Accept", "application/json,image/*,*/*");
-
+                        if (target.startsWith(\"https://corsproxy.io/?\"))
+                            target = target.substring(\"https://corsproxy.io/?\".length());
+                        URL ju = new URL(target);
+                        HttpURLConnection conn = (HttpURLConnection) ju.openConnection();
+                        conn.setRequestMethod(\"GET\");
+                        conn.setConnectTimeout(15000); conn.setReadTimeout(15000);
+                        conn.setRequestProperty(\"User-Agent\", \"Mozilla/5.0 (Android; TFApp/1.0)\");
                         int code = conn.getResponseCode();
-                        String mime = "application/json";
+                        String mime = \"application/json\";
                         String ct = conn.getContentType();
-                        if (ct != null) mime = ct.split(";")[0].trim();
-
+                        if (ct != null) mime = ct.split(\";\")[0].trim();
                         Map<String, String> hdrs = new HashMap<>();
-                        hdrs.put("Access-Control-Allow-Origin", "*");
-                        hdrs.put("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-                        hdrs.put("Cache-Control", "max-age=300");
-
+                        hdrs.put(\"Access-Control-Allow-Origin\", \"*\");
+                        hdrs.put(\"Cache-Control\", \"max-age=300\");
                         InputStream is = code >= 400 ? conn.getErrorStream() : conn.getInputStream();
-                        return new WebResourceResponse(mime, "UTF-8", code, "OK", hdrs, is);
+                        return new WebResourceResponse(mime, \"UTF-8\", code, \"OK\", hdrs, is);
                     } catch (Exception e) { /* fall through */ }
                 }
                 return super.shouldInterceptRequest(view, req);
@@ -338,20 +347,151 @@ public class MainActivity extends BridgeActivity {
         });
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        WebView wv = getBridge().getWebView();
-        if (wv != null) wv.resumeTimers();
+    public class TFMusicBridge {
+        @JavascriptInterface
+        public void onPlay(String title, String artist) {
+            curTitle = title != null ? title : \"TFMusic\";
+            curArtist = artist != null && !artist.isEmpty() ? artist : \"TFMusic\";
+            playing = true;
+            runOnUiThread(() -> { actualizarSession(); mostrarNotif(); });
+        }
+
+        @JavascriptInterface
+        public void onPause() {
+            playing = false;
+            runOnUiThread(() -> { actualizarSession(); mostrarNotif(); });
+        }
+
+        @JavascriptInterface
+        public void onStop() {
+            playing = false;
+            runOnUiThread(() -> { notifMgr.cancel(NOTIF_ID); mediaSession.setActive(false); });
+        }
     }
 
+    private void actualizarSession() {
+        mediaSession.setMetadata(new MediaMetadata.Builder()
+            .putString(MediaMetadata.METADATA_KEY_TITLE, curTitle)
+            .putString(MediaMetadata.METADATA_KEY_ARTIST, curArtist)
+            .putString(MediaMetadata.METADATA_KEY_ALBUM, \"TFMusic\")
+            .build());
+        long acts = PlaybackState.ACTION_SKIP_TO_PREVIOUS | PlaybackState.ACTION_SKIP_TO_NEXT
+            | (playing ? PlaybackState.ACTION_PAUSE : PlaybackState.ACTION_PLAY);
+        mediaSession.setPlaybackState(new PlaybackState.Builder()
+            .setActions(acts)
+            .setState(playing ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED,
+                      PlaybackState.PLAYBACK_POSITION_UNKNOWN, 1.0f)
+            .build());
+        if (!mediaSession.isActive()) mediaSession.setActive(true);
+    }
+
+    private PendingIntent mkPI(String action) {
+        Intent i = new Intent(action); i.setPackage(getPackageName());
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT
+            | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0);
+        return PendingIntent.getBroadcast(this, action.hashCode(), i, flags);
+    }
+
+    private void mostrarNotif() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+        Intent open = new Intent(this, MainActivity.class);
+        open.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        int pf = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
+        PendingIntent openPI = PendingIntent.getActivity(this, 0, open, pf);
+
+        Notification n = new Notification.Builder(this, CH_ID)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(curTitle.isEmpty() ? \"TFMusic\" : curTitle)
+            .setContentText(curArtist)
+            .setContentIntent(openPI)
+            .setStyle(new Notification.MediaStyle()
+                .setMediaSession(mediaSession.getSessionToken())
+                .setShowActionsInCompactView(0, 1, 2))
+            .addAction(new Notification.Action.Builder(
+                android.R.drawable.ic_media_previous, \"Anterior\", mkPI(ACT_PREV)).build())
+            .addAction(new Notification.Action.Builder(
+                playing ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play,
+                playing ? \"Pausar\" : \"Play\", mkPI(ACT_PP)).build())
+            .addAction(new Notification.Action.Builder(
+                android.R.drawable.ic_media_next, \"Siguiente\", mkPI(ACT_NEXT)).build())
+            .setVisibility(Notification.VISIBILITY_PUBLIC)
+            .setOngoing(playing)
+            .build();
+        notifMgr.notify(NOTIF_ID, n);
+    }
+
+    @Override public void onPause()  { super.onPause();  WebView wv = getBridge().getWebView(); if (wv != null) wv.resumeTimers(); }
+    @Override public void onResume() { super.onResume(); WebView wv = getBridge().getWebView(); if (wv != null) wv.resumeTimers(); }
+
     @Override
-    public void onResume() {
-        super.onResume();
-        WebView wv = getBridge().getWebView();
-        if (wv != null) wv.resumeTimers();
+    public void onDestroy() {
+        super.onDestroy();
+        if (mediaReceiver != null) try { unregisterReceiver(mediaReceiver); } catch(Exception e) {}
+        if (mediaSession != null) { mediaSession.setActive(false); mediaSession.release(); }
+        notifMgr.cancel(NOTIF_ID);
     }
 }'''
-          open(\'android/app/src/main/java/com/tfv/tfapp/MainActivity.java\', \'w\').write(java)
-          print(\'MainActivity.java generado con CORS bypass\')
+          open('android/app/src/main/java/com/tfv/tfapp/MainActivity.java', 'w').write(java)
+          print('MainActivity.java con MediaSession nativo generado')
           "
+
+      - name: Parchar music.html con puente nativo
+        run: |
+          python3 -c "
+          import re
+          path = 'www/music.html'
+          content = open(path).read()
+          bridge_js = '''
+          <script>
+          /* === TFMusic Native Bridge === */
+          (function(){
+            function hookAudio(){
+              var audio = document.querySelector('audio');
+              if(!audio){ setTimeout(hookAudio, 800); return; }
+              audio.addEventListener('play', function(){
+                setTimeout(function(){
+                  if(!window.TFMusicBridge) return;
+                  var t = document.getElementById('pbSong');
+                  var a = document.getElementById('pbArtist');
+                  try{ window.TFMusicBridge.onPlay(
+                    (t ? t.textContent : 'TFMusic').replace(/\d+x$/, '').trim(),
+                    a ? a.textContent : 'TFMusic'
+                  ); }catch(e){}
+                }, 200);
+              });
+              audio.addEventListener('pause', function(){
+                if(window.TFMusicBridge) try{ window.TFMusicBridge.onPause(); }catch(e){}
+              });
+              audio.addEventListener('ended', function(){
+                if(window.TFMusicBridge) try{ window.TFMusicBridge.onStop(); }catch(e){}
+              });
+            }
+            hookAudio();
+            window.TFMusicNativeCallback = function(action){
+              if(action === 'play_pause'){ if(typeof togglePlay === 'function') togglePlay(); }
+              else if(action === 'next'){ if(typeof nextTrack === 'function') nextTrack(); }
+              else if(action === 'prev'){ if(typeof prevTrack === 'function') prevTrack(); }
+            };
+          })();
+          </script>
+          '''
+          if '/* === TFMusic Native Bridge ===' not in content:
+              content = content.replace('</body>', bridge_js + '</body>')
+              open(path, 'w').write(content)
+              print('music.html parcheado con bridge nativo')
+          else:
+              print('Bridge ya estaba en music.html')
+          "
+
+      - name: Construir APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Subir APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: TFAPP-v1
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
