@@ -203,99 +203,155 @@ jobs:
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
 
-      - name: Modificar MainActivity para audio en background y permisos nativos
+      - name: Generar MainActivity con CORS bypass, audio background y permisos
         run: |
           MAIN="android/app/src/main/java/com/tfv/tfapp/MainActivity.java"
-          cat > "$MAIN" << 'JAVAEOF'
-          package com.tfv.tfapp;
+          python3 -c "
+          java = '''package com.tfv.tfapp;
 
-          import android.Manifest;
-          import android.app.NotificationChannel;
-          import android.app.NotificationManager;
-          import android.content.pm.PackageManager;
-          import android.os.Build;
-          import android.os.Bundle;
-          import android.webkit.WebSettings;
-          import android.webkit.WebView;
-          import androidx.core.app.ActivityCompat;
-          import androidx.core.content.ContextCompat;
-          import com.getcapacitor.BridgeActivity;
-          import java.util.ArrayList;
-          import java.util.List;
+import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.os.Bundle;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.BridgeWebViewClient;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-          public class MainActivity extends BridgeActivity {
-              private static final int PERM_REQ = 1001;
+public class MainActivity extends BridgeActivity {
+    private static final int PERM_REQ = 1001;
 
-              @Override
-              public void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
-                  crearCanalesNotificacion();
-                  pedirPermisos();
-                  configurarWebView();
-              }
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        crearCanalesNotificacion();
+        pedirPermisos();
+    }
 
-              private void crearCanalesNotificacion() {
-                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                      NotificationChannel canal = new NotificationChannel(
-                          "tfmusic_playback",
-                          "TFMusic - Reproducción",
-                          NotificationManager.IMPORTANCE_LOW
-                      );
-                      canal.setDescription("Controles de reproducción de TFMusic");
-                      canal.setSound(null, null);
-                      canal.setShowBadge(false);
-                      NotificationManager nm = getSystemService(NotificationManager.class);
-                      if (nm != null) nm.createNotificationChannel(canal);
-                  }
-              }
+    @Override
+    public void onStart() {
+        super.onStart();
+        configurarWebView();
+    }
 
-              private void pedirPermisos() {
-                  List<String> perms = new ArrayList<>();
-                  if (Build.VERSION.SDK_INT >= 33) {
-                      if (check(Manifest.permission.POST_NOTIFICATIONS)) perms.add(Manifest.permission.POST_NOTIFICATIONS);
-                      if (check(Manifest.permission.READ_MEDIA_IMAGES))  perms.add(Manifest.permission.READ_MEDIA_IMAGES);
-                      if (check(Manifest.permission.READ_MEDIA_VIDEO))   perms.add(Manifest.permission.READ_MEDIA_VIDEO);
-                  } else {
-                      if (check(Manifest.permission.READ_EXTERNAL_STORAGE)) perms.add(Manifest.permission.READ_EXTERNAL_STORAGE);
-                      if (check(Manifest.permission.WRITE_EXTERNAL_STORAGE)) perms.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-                  }
-                  if (check(Manifest.permission.CAMERA)) perms.add(Manifest.permission.CAMERA);
-                  if (!perms.isEmpty()) {
-                      ActivityCompat.requestPermissions(this, perms.toArray(new String[0]), PERM_REQ);
-                  }
-              }
+    private void crearCanalesNotificacion() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel canal = new NotificationChannel(
+                "tfmusic_playback", "TFMusic - Reproduccion", NotificationManager.IMPORTANCE_LOW);
+            canal.setDescription("Controles de TFMusic");
+            canal.setSound(null, null);
+            canal.setShowBadge(false);
+            NotificationManager nm = getSystemService(NotificationManager.class);
+            if (nm != null) nm.createNotificationChannel(canal);
+        }
+    }
 
-              private boolean check(String perm) {
-                  return ContextCompat.checkSelfPermission(this, perm) != PackageManager.PERMISSION_GRANTED;
-              }
+    private void pedirPermisos() {
+        List<String> perms = new ArrayList<>();
+        if (Build.VERSION.SDK_INT >= 33) {
+            if (check(Manifest.permission.POST_NOTIFICATIONS)) perms.add(Manifest.permission.POST_NOTIFICATIONS);
+            if (check(Manifest.permission.READ_MEDIA_IMAGES))  perms.add(Manifest.permission.READ_MEDIA_IMAGES);
+            if (check(Manifest.permission.READ_MEDIA_VIDEO))   perms.add(Manifest.permission.READ_MEDIA_VIDEO);
+        } else {
+            if (check(Manifest.permission.READ_EXTERNAL_STORAGE)) perms.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+            if (check(Manifest.permission.WRITE_EXTERNAL_STORAGE)) perms.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+        if (check(Manifest.permission.CAMERA)) perms.add(Manifest.permission.CAMERA);
+        if (!perms.isEmpty())
+            ActivityCompat.requestPermissions(this, perms.toArray(new String[0]), PERM_REQ);
+    }
 
-              private void configurarWebView() {
-                  WebView wv = getBridge().getWebView();
-                  if (wv != null) {
-                      WebSettings s = wv.getSettings();
-                      s.setMediaPlaybackRequiresUserGesture(false);
-                      s.setDomStorageEnabled(true);
-                      s.setDatabaseEnabled(true);
-                      s.setAllowFileAccess(true);
-                      s.setAllowContentAccess(true);
-                      s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-                  }
-              }
+    private boolean check(String p) {
+        return ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED;
+    }
 
-              @Override
-              public void onPause() {
-                  super.onPause();
-                  // Mantener timers activos para que el audio no se corte
-                  WebView wv = getBridge().getWebView();
-                  if (wv != null) wv.resumeTimers();
-              }
+    private void configurarWebView() {
+        WebView wv = getBridge().getWebView();
+        if (wv == null) return;
 
-              @Override
-              public void onResume() {
-                  super.onResume();
-                  WebView wv = getBridge().getWebView();
-                  if (wv != null) wv.resumeTimers();
-              }
-          }
-          JAVAEOF
-          echo "✅ MainActivity.java generado"
+        WebSettings s = wv.getSettings();
+        s.setMediaPlaybackRequiresUserGesture(false);
+        s.setDomStorageEnabled(true);
+        s.setDatabaseEnabled(true);
+        s.setAllowFileAccess(true);
+        s.setAllowContentAccess(true);
+        s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+
+        // CORS bypass: interceptar APIs externas y hacerlas nativas
+        wv.setWebViewClient(new BridgeWebViewClient(getBridge()) {
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest req) {
+                String url = req.getUrl().toString();
+                boolean intercept = url.contains("wallhaven.cc")
+                    || url.contains("corsproxy.io")
+                    || url.contains("api.tmdb.org")
+                    || url.contains("api.jikan.moe")
+                    || url.contains("image.tmdb.org");
+
+                if (intercept && "GET".equals(req.getMethod())) {
+                    try {
+                        String target = url;
+                        if (target.startsWith("https://corsproxy.io/?"))
+                            target = target.substring("https://corsproxy.io/?".length());
+                        if (target.startsWith("https://corsproxy.io/raw?url="))
+                            target = java.net.URLDecoder.decode(
+                                target.substring("https://corsproxy.io/raw?url=".length()), "UTF-8");
+
+                        URL javaUrl = new URL(target);
+                        HttpURLConnection conn = (HttpURLConnection) javaUrl.openConnection();
+                        conn.setRequestMethod("GET");
+                        conn.setConnectTimeout(15000);
+                        conn.setReadTimeout(15000);
+                        conn.setRequestProperty("User-Agent",
+                            "Mozilla/5.0 (Android; TFApp/1.0)");
+                        conn.setRequestProperty("Accept", "application/json,image/*,*/*");
+
+                        int code = conn.getResponseCode();
+                        String mime = "application/json";
+                        String ct = conn.getContentType();
+                        if (ct != null) mime = ct.split(";")[0].trim();
+
+                        Map<String, String> hdrs = new HashMap<>();
+                        hdrs.put("Access-Control-Allow-Origin", "*");
+                        hdrs.put("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+                        hdrs.put("Cache-Control", "max-age=300");
+
+                        InputStream is = code >= 400 ? conn.getErrorStream() : conn.getInputStream();
+                        return new WebResourceResponse(mime, "UTF-8", code, "OK", hdrs, is);
+                    } catch (Exception e) { /* fall through */ }
+                }
+                return super.shouldInterceptRequest(view, req);
+            }
+        });
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        WebView wv = getBridge().getWebView();
+        if (wv != null) wv.resumeTimers();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        WebView wv = getBridge().getWebView();
+        if (wv != null) wv.resumeTimers();
+    }
+}'''
+          open(\'android/app/src/main/java/com/tfv/tfapp/MainActivity.java\', \'w\').write(java)
+          print(\'MainActivity.java generado con CORS bypass\')
+          "
